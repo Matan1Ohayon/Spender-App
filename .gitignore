@@ -40,6 +40,7 @@ serviceAccount*.json
 
 # ignore ALL json EXCEPT server package files
 *.json
+!vercel.json
 !server/package.json
 !server/package-lock.json
 
