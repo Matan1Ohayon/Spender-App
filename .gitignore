@@ -31,13 +31,34 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.local
+.env.*.local
+
+# firebase admin private keys
+serviceAccount*.json
+*.json
+
+# BUT allow firebase web config (important)
+!firebaseConfig.json
+
+# vercel
+.vercel/
 
 # typescript
 *.tsbuildinfo
 
-app-example
+# build output
+build/
+dist/
 
-# generated native folders
+# native generated folders
 /ios
 /android
+
+# server output (for backend)
+server/node_modules/
+server/dist/
+
+# misc
+app-example
