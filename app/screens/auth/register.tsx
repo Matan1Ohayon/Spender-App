@@ -1,5 +1,4 @@
 import { Link, router } from "expo-router";
-import { httpsCallable } from "firebase/functions";
 import { useRef, useState } from "react";
 import {
     Image,
@@ -69,21 +68,31 @@ export default function Register() {
 
         try {
 
-            const registerFn = httpsCallable(functions, "register");
-            const res = await registerFn({
-                phone,
-                password: pass,
-                name,
+            const response = await fetch("https://spender-app-five.vercel.app/api/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    phone,
+                    password: pass,
+                    name
+                })
             });
 
-            console.log("REGISTER:", res.data);
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.error || "Registration failed");
+                return;
+            }
+
+            console.log("REGISTER IS OK : ", phone);
             router.push({
                 pathname: "/screens/auth/otp",
                 params: { phone, page }
             });
 
         } catch (err : any) {
-            console.log(err);
+            console.log("REGISTER FAIL : ", err);
             setError(err.message);
         }
 
