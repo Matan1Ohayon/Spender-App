@@ -37,7 +37,11 @@ yarn-error.*
 
 # firebase admin private keys
 serviceAccount*.json
+
+# ignore ALL json EXCEPT server package files
 *.json
+!server/package.json
+!server/package-lock.json
 
 # BUT allow firebase web config (important)
 !firebaseConfig.json
