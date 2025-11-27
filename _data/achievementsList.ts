@@ -2,13 +2,13 @@ export const achievementsList = [
     {
       id: 1,
       title: "Zero Waste Day",
-      description: "A full day with no unnecessary expenses.",
+      description: "A whole day with no unnecessary expenses.",
       condition: "day_no_unnecessary",
     },
     {
       id: 2,
       title: "3-Day Clean Streak",
-      description: "Three consecutive days without waste spending.",
+      description: "Three days in a row without waste spending.",
       condition: "streak_3_days",
     },
     {
@@ -19,15 +19,15 @@ export const achievementsList = [
     },
     {
       id: 4,
-      title: "Category Saver",
-      description: "Reduce one category by 20% compared to last month.",
-      condition: "category_reduce_20",
+      title: "Monthly Reduction",
+      description: "Reduce Monthly total spending by 10%.",
+      condition: "monthly_drop_10",
     },
     {
       id: 5,
-      title: "Budget Keeper",
-      description: "Stay within your planned monthly budget.",
-      condition: "budget_month_ok",
+      title: "Category Saver",
+      description: "Reduce one category by 20% compared to last month.",
+      condition: "category_reduce_20",
     },
     {
       id: 6,

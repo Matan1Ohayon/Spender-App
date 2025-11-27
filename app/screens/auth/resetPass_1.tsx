@@ -1,19 +1,19 @@
 import { db } from "@/firebase";
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
 import {
-    Image,
-    Keyboard,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import ErrorMessage from "../../../components/ErrorMessage";
+import AuthHero from "@/components/AuthHero";
 
 
 const PRIMARY = "#390492";
@@ -33,8 +33,9 @@ export default function resetPass_1() {
     const page = "reset1";
 
     const [phone, setPhone] = useState("");
-  
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
   
     const phoneRef = useRef<TextInput>(null);
 
@@ -46,23 +47,30 @@ export default function resetPass_1() {
             return;
         }
         setError(""); 
+        setLoading(true);
 
         try {
-            const userRef = doc(db, "users", phone);
+
+            const cleanPhone = phone.trim();
+
+            const userRef = doc(db, "users", cleanPhone);
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
-                setError("Phone not found");
+                setError("Phone number not found.");
+                setLoading(false);
                 return;
             }
-            console.log("Reset 1 ok");
+
+            setLoading(false);
             router.push({
                 pathname: "/screens/auth/otp",
-                params: { phone, page }
+                params: { phone : cleanPhone, page }
             });
         } catch (e) {
             console.log("Reset error:", e);
-            setError("Reset failed");
+            setError("Something went wrong.");
+            setLoading(false);
         }
       }
 
@@ -70,22 +78,12 @@ export default function resetPass_1() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
 
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={28} color="white" />
-        </TouchableOpacity>
-
-        <View style={styles.topSection}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../../assets/images/Theme.png")}
-              style={styles.logo}
-            /> 
-            <Text style={styles.greeting}>Let's reset your password</Text>
-          </View>
-        </View>
+        <AuthHero
+          title="Let's reset your password"
+          titleVariant="medium"
+          showBackButton
+          onBackPress={() => router.back()}
+        />
 
         <View style={styles.bottomSection}>
           
@@ -104,10 +102,15 @@ export default function resetPass_1() {
 
           {error !== "" && <ErrorMessage message={error} />}
 
-
-          <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-            <Text style={styles.resetText}>Send code</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.resetButton, loading && { opacity: 0.6 }]}
+                onPress={!loading ? handleReset : undefined}
+                disabled={loading}
+            >
+                <Text style={styles.resetText}>
+                    {loading ? "Processing..." : "Send code"}
+                </Text>
+            </TouchableOpacity>
 
         </View>
 
@@ -122,71 +125,31 @@ const styles = StyleSheet.create({
     backgroundColor: LIGHT_BG,
   },
 
-  backButton: {
-    position: "absolute",
-    top: 60,
-    left: 25,
-    zIndex: 50,  
-    padding: 8,
-  },
-
-  topSection: {
-    backgroundColor: PRIMARY,
-    height: "40%",
-    width: "100%",
-    marginTop: -70,
-    paddingTop: 70,
-    paddingLeft: 25,
-    transform: [{ skewY: "10deg" }],
-    overflow: "hidden",
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    position: "absolute",
-    top: 20,
-    right: 25,
-    zIndex: 10,
-  },
-  logoContainer: {
-    transform: [{ skewY: "-10deg" }],
-  },
-  greeting: {
-    fontSize: 50,
-    fontFamily: "DMSans_700Bold",
-    fontWeight: "700",
-    color: LIGHT_BG,
-    textShadowColor: LIGHT_BG,
-    textShadowRadius: 5,
-    marginBottom: 40,
-    marginTop: 120,
-  },
-
   bottomSection: {
-    marginTop: 50,
-    paddingHorizontal: 30,
+    marginTop: scaleSize(-10),
+    paddingHorizontal: scaleSize(30),
   },
   input: {
     borderBottomWidth: 2,
     borderBottomColor: PRIMARY,
-    paddingVertical: 14,
+    paddingVertical: scaleSize(14),
     fontFamily: "DMSans_400Regular",
-    fontSize: 16,
-    marginBottom: 25,
+    fontSize: scaleFont(16),
+    marginBottom: scaleSize(25),
     color: PRIMARY,
   },
   resetButton: {
     backgroundColor: PRIMARY,
-    paddingVertical: 14,
-    borderRadius: 20,
+    paddingVertical: scaleSize(14),
+    borderRadius: scaleSize(20),
     alignItems: "center",
-    marginTop: 25,
+    marginTop: scaleSize(25),
   },
 
   resetText: {
     color: "white",
     fontFamily: "DMSans_700Bold",
-    fontSize: 18,
+    fontSize: scaleFont(18),
   },
 
 });

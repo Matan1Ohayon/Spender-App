@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { scaleFont, scaleSize } from "@/utils/scale";
 
 const PRIMARY = "#390492";
 
@@ -31,10 +32,10 @@ export default function InsightOfWeek({ data, preview = false }: InsightProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "white",
-    marginTop: 20,
-    marginHorizontal: 20,
-    padding: 20,
-    borderRadius: 20,
+    marginTop: scaleSize(20),
+    marginHorizontal: scaleSize(20),
+    padding: scaleSize(20),
+    borderRadius: scaleSize(20),
 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
@@ -44,27 +45,27 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 18,
+    fontSize: scaleFont(18),
     fontWeight: "700",
     color: PRIMARY,
-    marginBottom: 8,
+    marginBottom: scaleSize(8),
   },
 
   text: {
-    fontSize: 15,
+    fontSize: scaleFont(15),
     color: "#444",
-    lineHeight: 20,
+    lineHeight: scaleSize(20),
   },
 
   // PREVIEW
   previewBox: {
-    height: 60,
+    height: scaleSize(60),
     justifyContent: "center",
   },
 
   previewText: {
     color: PRIMARY,
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontWeight: "700",
     textAlign: "center",
   },

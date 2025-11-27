@@ -2,32 +2,39 @@ import ErrorMessage from "@/components/ErrorMessage";
 import Header from "@/components/Header";
 import PasswordInput from "@/components/PasswordInput";
 import SideMenu from "@/components/SideMenu";
+import { useExpenses } from "@/contexts/ExpensesContext";
+import { db } from "@/firebase";
 import { Ionicons } from "@expo/vector-icons";
+import bcrypt from "bcryptjs";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    AppState,
-    Image,
-    ImageSourcePropType,
-    Keyboard,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Animated,
+  AppState,
+  Image,
+  ImageSourcePropType,
+  Keyboard,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
+import { scaleFont, scaleSize } from "@/utils/scale";
 
 const PRIMARY = "#390492";
 const LIGHT_BG = "#efe7ff";
 
 export default function ProfileScreen() {
+  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { graphsData } = useExpenses();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [name, setName] = useState("Matan Ohayon");
-  const [phone] = useState("0507292524"); // לא ניתן לשינוי
+  const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [avatar, setAvatar] = useState<string | ImageSourcePropType | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -35,9 +42,37 @@ export default function ProfileScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const slideAnim = useState(new Animated.Value(300))[0];
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
+
+  // --- טעינת מידע המשתמש מה-Firestore ---
+  useEffect(() => {
+    if (!phone) return;
+
+    async function loadUserData() {
+      try {
+        const userRef = doc(db, "users", phone);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+          setError("User not found");
+          return;
+        }
+
+        const userData = userSnap.data();
+        setName(userData.name || "");
+        setPhoneNumber(userData.phone || phone);
+        setAvatar(userData.avatar || null);
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        setError("Failed to load user data");
+      }
+    }
+
+    loadUserData();
+  }, [phone]);
 
   // --- טיפול בחזרה לאפליקציה ---
   useEffect(() => {
@@ -169,8 +204,8 @@ export default function ProfileScreen() {
     await takePhoto();
   };
 
-  const pickFromAvatars = (selectedAvatar: ImageSourcePropType) => {
-    setAvatar(selectedAvatar);
+  const pickFromAvatars = (index: number) => {
+    setAvatar(defaultAvatarsURL[index]);
   }
 
   // --- בחירת אווטארים מובנים ---
@@ -185,6 +220,48 @@ export default function ProfileScreen() {
     "https://files.catbox.moe/r0caa9.png",  //GIRL_ICON
     "https://files.catbox.moe/wwboj3.png",  //MONEYFACE_ICON
   ];
+
+  // --- העלאת תמונה ל-Catbox.moe ---
+  const uploadImageToStorage = async (uri: string): Promise<string> => {
+    try {
+      // יצירת FormData להעלאה ל-catbox.moe
+      const formData = new FormData();
+      const filename = `avatar_${phone}_${Date.now()}.jpg`;
+      
+      // ב-React Native, FormData צריך אובייקט עם uri, type, name
+      formData.append("reqtype", "fileupload");
+      formData.append("fileToUpload", {
+        uri: uri,
+        type: "image/jpeg",
+        name: filename,
+      } as any);
+      
+      // העלאת התמונה ל-catbox.moe
+      const response = await fetch("https://catbox.moe/user/api.php", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+      
+      const result = await response.text();
+      
+      // catbox.moe מחזיר את ה-URL ישירות או שגיאה
+      if (result.startsWith("http")) {
+        return result.trim();
+      } else {
+        throw new Error(`Upload failed: ${result}`);
+      }
+    } catch (error) {
+      console.error("Error uploading image to catbox.moe:", error);
+      throw error;
+    }
+  };
 
   // --- ולידציה ---
   const validateForm = (): boolean => {
@@ -224,13 +301,68 @@ export default function ProfileScreen() {
     return true;
   };
 
-  const handleSave = () => {
-    if (!validateForm()) {
+  const handleSave = async () => {
+    if (!validateForm() || !phone) {
       return;
     }
-    
-    // בעתיד: עדכון בשרת
-    router.push("/screens/home/homePage");
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const userRef = doc(db, "users", phone);
+      const updateData: any = {
+        name,
+        updatedAt: serverTimestamp(),
+      };
+
+      // עדכון אווטאר
+      let avatarURL = "";
+      if (avatar) {
+        if (typeof avatar === "string") {
+          // אם זה URI מקומי (מגלריה/מצלמה), העלה ל-Storage
+          if (avatar.startsWith("file://") || avatar.startsWith("content://")) {
+            avatarURL = await uploadImageToStorage(avatar);
+          } else {
+            // אם זה כבר URL (אווטאר מובנה או URL קיים)
+            avatarURL = avatar;
+          }
+        } else {
+          // אם זה ImageSourcePropType (require), השתמש ב-URL המובנה
+          const avatarIndex = defaultAvatars.findIndex(
+            (img) => img === avatar
+          );
+          if (avatarIndex !== -1) {
+            avatarURL = defaultAvatarsURL[avatarIndex];
+          }
+        }
+        updateData.avatar = avatarURL;
+      }
+
+      // עדכון סיסמה אם יש
+      if (password && confirm) {
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        updateData.password = hashedPassword;
+      }
+
+      await updateDoc(userRef, updateData);
+
+      // איפוס שדות הסיסמה
+      setPassword("");
+      setConfirm("");
+
+      router.push({
+        pathname: "/screens/home/homePage",
+        params: { phone },
+      });
+    } catch (error: any) {
+      console.error("Error saving profile:", error);
+      setError("Failed to save changes. Please try again.");
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -261,7 +393,7 @@ export default function ProfileScreen() {
                     {/* OPTIONS לבחור אווטאר ברירת מחדל */}
                     <View style={styles.avatarOptions}>
                         {defaultAvatars.map((img, i) => (
-                        <TouchableOpacity key={i} onPress={() => pickFromAvatars(img)}>
+                        <TouchableOpacity key={i} onPress={() => pickFromAvatars(i)}>
                             <Image source={img} style={styles.smallAvatar} />
                         </TouchableOpacity>
                         ))}
@@ -280,7 +412,7 @@ export default function ProfileScreen() {
 
                 {/* PHONE - נעול */}
                 <TextInput
-                    value={phone}
+                    value={phoneNumber}
                     editable={false}
                     style={[styles.input, { backgroundColor: "#efe7f1" }]}
                 />
@@ -311,15 +443,25 @@ export default function ProfileScreen() {
             {error ? <ErrorMessage message={error} /> : null}
 
             {/* SAVE BUTTON */}
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                <Text style={styles.saveText}>Save Changes</Text>
+            <TouchableOpacity 
+                style={[styles.saveBtn, loading && styles.saveBtnDisabled]} 
+                onPress={handleSave}
+                disabled={loading}
+            >
+                <Text style={styles.saveText}>
+                    {loading ? "Saving..." : "Save Changes"}
+                </Text>
             </TouchableOpacity>
 
         </View>
 
 
         
-        <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
+        <SideMenu 
+                visible={menuOpen} 
+                onClose={() => setMenuOpen(false)} 
+                phone={phone as string}
+            />
 
         {/* IMAGE PICKER ACTION SHEET */}
         <Modal
@@ -388,85 +530,85 @@ const styles = StyleSheet.create({
   },
 
   mainL: {
-    paddingTop: 20,
-    paddingHorizontal: 10,
-    rowGap: 3,
+    paddingTop: scaleSize(20),
+    paddingHorizontal: scaleSize(10),
+    rowGap: scaleSize(3),
   },
 
   avatarContainer: {
-    marginTop: 20,
+    marginTop: scaleSize(20),
     alignItems: "center",
   },
 
   avatar: {
-    width: 120,
-    height: 120,
+    width: scaleSize(120),
+    height: scaleSize(120),
     backgroundColor: LIGHT_BG,
-    borderRadius: 100,
+    borderRadius: scaleSize(100),
     borderColor: PRIMARY,
-    borderWidth: 3,
+    borderWidth: scaleSize(3),
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
+    marginRight: scaleSize(10),
   },
 
   editCircle: {
     position: "absolute",
-    bottom: -8,
-    right: -8,
-    width: 40,
-    height: 40,
+    bottom: scaleSize(-8),
+    right: scaleSize(-8),
+    width: scaleSize(40),
+    height: scaleSize(40),
     backgroundColor: PRIMARY,
-    borderRadius: 40,
+    borderRadius: scaleSize(40),
     justifyContent: "center",
     alignItems: "center",
   },
 
   editIcon: {
-    width: 20,
-    height: 20,
+    width: scaleSize(20),
+    height: scaleSize(20),
     tintColor: "white",
   },
 
   avatarOptions: {
     flexDirection: "row",
-    marginTop: 10,
-    gap: 12,
+    marginTop: scaleSize(10),
+    gap: scaleSize(12),
   },
 
   smallAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: scaleSize(40),
+    height: scaleSize(40),
+    borderRadius: scaleSize(20),
   },
 
   mainR:{
-    paddingTop: 20,
-    paddingHorizontal: 10,
-    rowGap: 3,
-    paddingRight: 20,
+    paddingTop: scaleSize(20),
+    paddingHorizontal: scaleSize(10),
+    rowGap: scaleSize(3),
+    paddingRight: scaleSize(20),
     width: "60%",
   },
 
   input: {
     borderBottomWidth: 2,
     borderBottomColor: PRIMARY,
-    paddingVertical: 14,
+    paddingVertical: scaleSize(14),
     fontFamily: "DMSans_400Regular",
-    fontSize: 16,
-    marginBottom: 25,
+    fontSize: scaleFont(16),
+    marginBottom: scaleSize(25),
     color: PRIMARY,
   },
 
   restPass: {
     width: "100%",
-    paddingHorizontal: 20,
+    paddingHorizontal: scaleSize(20),
   }, 
 
   sectionTitle: {
-    marginTop: 25,
-    marginBottom: 15,
-    fontSize: 16,
+    marginTop: scaleSize(25),
+    marginBottom: scaleSize(15),
+    fontSize: scaleFont(16),
     fontWeight: "700",
     color: PRIMARY,
   },
@@ -474,17 +616,21 @@ const styles = StyleSheet.create({
   saveBtn: {
     width: "80%",
     backgroundColor: PRIMARY,
-    paddingVertical: 14,
-    borderRadius: 20,
-    marginTop: 30,
+    paddingVertical: scaleSize(14),
+    borderRadius: scaleSize(20),
+    marginTop: scaleSize(30),
     alignItems: "center",
     alignSelf: "center"
   },
 
   saveText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: scaleFont(18),
     fontWeight: "600",
+  },
+
+  saveBtnDisabled: {
+    opacity: 0.6,
   },
 
   // ACTION SHEET STYLES
@@ -496,24 +642,24 @@ const styles = StyleSheet.create({
 
   actionSheet: {
     backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
-    paddingTop: 20,
+    borderTopLeftRadius: scaleSize(20),
+    borderTopRightRadius: scaleSize(20),
+    paddingBottom: scaleSize(40),
+    paddingTop: scaleSize(20),
   },
 
   actionSheetHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: scaleSize(20),
+    paddingBottom: scaleSize(20),
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
 
   actionSheetTitle: {
-    fontSize: 18,
+    fontSize: scaleFont(18),
     fontWeight: "600",
     color: "#000",
   },
@@ -521,13 +667,13 @@ const styles = StyleSheet.create({
   actionSheetOption: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 12,
+    paddingHorizontal: scaleSize(20),
+    paddingVertical: scaleSize(16),
+    gap: scaleSize(12),
   },
 
   actionSheetOptionText: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     color: "#000",
   },
 });

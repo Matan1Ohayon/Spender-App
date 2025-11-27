@@ -1,28 +1,14 @@
 import Collapse from "@/components/insights/Collapse";
+import { GraphsData } from "@/logic/buildGraphsData";
 import { StyleSheet, Text, View } from "react-native";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import { BarChart, PieChart } from "react-native-gifted-charts";
-
-interface GraphsData {
-  pie: {
-    good: number;
-    unnecessary: number;
-  };
-  bar: Array<{
-    label: string;
-    value: number;
-  }>;
-  comparisons: Array<{
-    label: string;
-    amount: string;
-  }>;
-}
 
 interface GraphsSectionProps {
   mode?: "full" | "preview";
   data: GraphsData;
 }
 
-// פונקציה שמזהה קטגוריה ומחזירה אימוג'י
 function getCategoryEmoji(category: string): string {
   const categoryMap: Record<string, string> = {
     groceries: "🛒",
@@ -43,7 +29,6 @@ function getCategoryEmoji(category: string): string {
 export default function GraphsSection({ mode = "full", data }: GraphsSectionProps) {
   const isPreview = mode === "preview";
 
-  // נתונים ל-preview - עם צבעים לבנים
   const previewPieData = [
     { value: data.pie.good, color: "white", text: "Good" },
     { value: data.pie.unnecessary, color: "#8B73FF", text: "Unnecessary" },
@@ -55,13 +40,11 @@ export default function GraphsSection({ mode = "full", data }: GraphsSectionProp
     frontColor: "white",
   }));
 
-  // נתונים ל-full - עם צבעים מקוריים
   const fullPieData = [
     { value: data.pie.good, color: "#390492", text: "Good" },
     { value: data.pie.unnecessary, color: "#8B73FF", text: "Unnecessary" },
   ];
 
-  // צבעים שונים לכל בר - באותה שפה של הגרף פאי
   const barColors = ["#390492", "#8B73FF", "#6B5CE6"];
   const fullBarData = data.bar.map((b, index) => ({
     value: b.value,
@@ -215,25 +198,25 @@ const styles = StyleSheet.create({
   },
 
   previewCategory: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     color: "white",
     fontWeight: "600",
     marginBottom: 4,
   },
 
   previewAmount: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     color: "white",
     fontWeight: "700",
   },
 
   previewDate: {
-    fontSize: 11,
+    fontSize: scaleFont(11),
     color: "rgba(255, 255, 255, 0.7)",
   },
 
   progressRow: {
-    marginTop: 12,
+    marginTop: scaleSize(12),
   },
 
   progressLabelContainer: {
@@ -244,28 +227,28 @@ const styles = StyleSheet.create({
   },
 
   progressLabel: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     color: "white",
     fontWeight: "500",
   },
 
   progressValue: {
-    fontSize: 12,
+    fontSize: scaleFont(12),
     color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "600",
   },
 
   progressBarContainer: {
-    height: 4,
+    height: scaleSize(4),
     backgroundColor: "rgba(255, 255, 255, 0.15)",
-    borderRadius: 2,
+    borderRadius: scaleSize(2),
     overflow: "hidden",
   },
 
   progressBar: {
     height: "100%",
     backgroundColor: "white",
-    borderRadius: 2,
+    borderRadius: scaleSize(2),
   },
 
   row: {
@@ -283,19 +266,19 @@ const styles = StyleSheet.create({
 
   chartContainer: {
     flexShrink: 1,
-    marginRight: 20,
+    marginRight: scaleSize(20),
   },
 
   barChartContainer: {
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: scaleSize(20),
   },
 
   labelsBox: {
     flexShrink: 0,
-    minWidth: 120,
+    minWidth: scaleSize(120),
   },
 
   barLabelsBox: {
@@ -304,25 +287,25 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: scaleSize(10),
   },
 
   labelText: {
-    fontSize: 15,
+    fontSize: scaleFont(15),
     color: "#444",
   },
 
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
-    marginHorizontal: 8,
+    marginBottom: scaleSize(8),
+    marginHorizontal: scaleSize(8),
   },
 
   colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
+    width: scaleSize(12),
+    height: scaleSize(12),
+    borderRadius: scaleSize(6),
+    marginRight: scaleSize(8),
   },
 });

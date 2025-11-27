@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -17,7 +17,7 @@ interface SwipeableCardProps {
   item: any;
   index: number;
   renderCard: (item: any, isEditing?: boolean) => React.ReactNode;
-  onSwipeOut?: () => void;
+  onSwipeOut?: (direction: 'left' | 'right') => void;
   scale: SharedValue<number>;
   translateY: SharedValue<number>;
   isEditing?: boolean;
@@ -34,7 +34,7 @@ function SwipeableCard({ item, index, renderCard, onSwipeOut, scale, translateY,
   const shouldShowLabels = index === 0 && !isEditing;
 
   const panGesture = Gesture.Pan()
-    .enabled(index === 0 && !isEditing) // רק הכרטיס הראשון יכול להיות נגרר, ולא כשעורכים
+    .enabled(index === 0 && !isEditing) 
     .onStart(() => {
       startX.value = position.value;
     })
@@ -43,12 +43,11 @@ function SwipeableCard({ item, index, renderCard, onSwipeOut, scale, translateY,
     })
     .onEnd((e) => {
       if (Math.abs(position.value) > SWIPE_THRESHOLD) {
-        // קורא ל-onSwipeOut מיד - לא מחכה שהאנימציה תסתיים
+        const direction: 'left' | 'right' = position.value > 0 ? 'right' : 'left';
         if (onSwipeOut) {
-          runOnJS(onSwipeOut)();
+          runOnJS(onSwipeOut)(direction);
         }
         
-        // אנימציה חלקה של ה-swipe החוצה - בסגנון iOS
         const targetX = position.value > 0 ? width * 1.5 : -width * 1.5;
         position.value = withSpring(
           targetX,
@@ -58,29 +57,25 @@ function SwipeableCard({ item, index, renderCard, onSwipeOut, scale, translateY,
             velocity: e.velocityX,
           }
         );
-        // אנימציה חלקה של ה-opacity - הכרטיס נעלם בצורה אלגנטית
         opacity.value = withSpring(0, {
           damping: 30,
           stiffness: 250,
         });
       } else {
-        // אנימציה חלקה של החזרה למקום - בסגנון iOS
         position.value = withSpring(0, {
           damping: 30,
           stiffness: 250,
         });
-        // ודא שה-opacity נשאר 1
         opacity.value = 1;
       }
     });
 
   const animatedStyle = useAnimatedStyle(() => {
-    // אינטרפולציה חלקה יותר של הרוטציה - פחות חדה, יותר טבעית
     const rotation = interpolate(
       position.value,
       [-width, 0, width],
-      [-12, 0, 12], // פחות רוטציה = יותר טבעי
-      'clamp' // מונע ערכים קיצוניים
+      [-12, 0, 12], 
+      'clamp' 
     );
     
     return {
@@ -88,7 +83,7 @@ function SwipeableCard({ item, index, renderCard, onSwipeOut, scale, translateY,
         { translateX: position.value },
         { rotate: `${rotation}deg` },
       ],
-      opacity: opacity.value, // אנימציה חלקה של ה-opacity
+      opacity: opacity.value, 
     };
   });
 
@@ -117,7 +112,6 @@ const leftLabelStyle = useAnimatedStyle(() => {
   };
 });
 
-  // Scale + translate stack עם אנימציה חלקה
   const stackStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -128,7 +122,7 @@ const leftLabelStyle = useAnimatedStyle(() => {
           translateY: translateY.value,
         },
       ],
-      opacity: 1, // כל הכרטיסים לא שקופים
+      opacity: 1, 
     };
   });
 
@@ -164,9 +158,10 @@ interface TinderStackProps {
   data: any[];
   renderCard: (item: any, isEditing?: boolean) => React.ReactNode;
   isEditing?: boolean;
+  onSwipe?: (direction: 'left' | 'right', item: any) => void;
 }
 
-export default function TinderStack({ data, renderCard, isEditing = false }: TinderStackProps) {
+export default function TinderStack({ data, renderCard, isEditing = false, onSwipe }: TinderStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Position shared value עבור הכרטיס הראשון - משמש ל-overlay
@@ -184,12 +179,38 @@ export default function TinderStack({ data, renderCard, isEditing = false }: Tin
     useSharedValue(25),
     useSharedValue(45),
   ];
-
-  function removeTopCard() {
-    // מעדכן את ה-index מיד - כך שהכרטיס השני יהיה נגיש מיד
-    setCurrentIndex((prev) => prev + 1);
+  
+  // מסנן את הכרטיסיות - רק כאלה ללא type (ריק או לא קיים)
+  // משתמשים ב-useMemo כדי להבטיח שהסינון מתעדכן נכון
+  const filteredData = useMemo(() => {
+    return data.filter((item: any) => !item.type || item.type === "");
+  }, [data]);
+  
+  // מאפס את currentIndex אם ה-data השתנה משמעותית (כרטיסים הוסרו)
+  // חשוב: currentIndex צריך להישאר 0 כשהכרטיסיה הראשונה נעלמת
+  useEffect(() => {
+    // אם currentIndex גדול או שווה לאורך ה-filteredData, מאפסים אותו
+    if (currentIndex >= filteredData.length) {
+      setCurrentIndex(0);
+    }
+    // אם אין כרטיסים בכלל, מאפסים את ה-index
+    if (filteredData.length === 0) {
+      setCurrentIndex(0);
+    }
+    // אם currentIndex הוא 0 ויש כרטיסים, זה בסדר - נשאר 0
+    // זה מבטיח שכשהכרטיסיה הראשונה נעלמת, currentIndex נשאר 0 והכרטיסיה הבאה תופיע
+  }, [filteredData.length, currentIndex]);
+  
+  function removeTopCard(direction: 'left' | 'right') {
+    // לא מעדכן את currentIndex מיד - נחכה שהכרטיסיה תיעלם מה-filteredData
+    const currentItem = filteredData[currentIndex];
     // מאפס את ה-position כדי שה-overlay יחזור להיות שקוף
     topCardPosition.value = 0;
+    
+    // קורא ל-callback אם קיים
+    if (onSwipe && currentItem) {
+      onSwipe(direction, currentItem);
+    }
   }
 
   // מעדכן את ה-shared values מיד כשהכרטיסים משתנים
@@ -211,8 +232,8 @@ export default function TinderStack({ data, renderCard, isEditing = false }: Tin
     translateYs[2].value = withSpring(45, springConfig);
   }, [currentIndex]);
 
-  // לוקח את 3 הכרטיסים הבאים להצגה
-  const visibleCards = data.slice(currentIndex, currentIndex + 3);
+  // לוקח את 3 הכרטיסים הבאים להצגה (רק מהמסוננים)
+  const visibleCards = filteredData.slice(currentIndex, currentIndex + 3);
 
   // Overlay style - מתכהה כשמגררים את הכרטיס
   const overlayStyle = useAnimatedStyle(() => {

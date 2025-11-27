@@ -1,10 +1,9 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
 # dependencies
 node_modules/
 
 # Expo
 .expo/
+.expo-shared/
 dist/
 web-build/
 expo-env.d.ts
@@ -38,17 +37,8 @@ yarn-error.*
 # firebase admin private keys
 serviceAccount*.json
 
-# ignore ALL json EXCEPT server package files
-*.json
-!vercel.json
-!server/package.json
-!server/package-lock.json
-
-# BUT allow firebase web config (important)
-!firebaseConfig.json
-
-# vercel
-.vercel/
+# allow firebase web config (safe to commit)
+firebaseConfig.json
 
 # typescript
 *.tsbuildinfo
@@ -58,12 +48,8 @@ build/
 dist/
 
 # native generated folders
-/ios
-/android
-
-# server output (for backend)
-server/node_modules/
-server/dist/
+ios/
+android/
 
 # misc
 app-example

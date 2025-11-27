@@ -1,8 +1,17 @@
-import { expenses } from "@/_data/insightsMockData";
 import Header from "@/components/Header";
 import SideMenu from "@/components/SideMenu";
+import { useExpenses } from "@/contexts/ExpensesContext";
+import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs
+} from "firebase/firestore";
+import { useEffect, useState } from "react";
 import {
     Modal,
     Platform,
@@ -10,8 +19,11 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
+import { scaleFont, scaleSize } from "@/utils/scale";
+
+
 
 const PRIMARY = "#390492";
 const LIGHT_BG = "#efe7ff";
@@ -31,9 +43,45 @@ const CATEGORY_EMOJIS: { [key: string]: string } = {
     "Other": "💡",
 };
 
+function parseDateString(dateString: string): Date {
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const parts = dateString.trim().split(" ");
+    if (parts.length !== 2) return new Date();
+  
+    const monthIndex = monthNames.indexOf(parts[0]);
+    const day = parseInt(parts[1]);
+    if (monthIndex === -1 || isNaN(day)) return new Date();
+  
+    const currentYear = new Date().getFullYear();
+    return new Date(currentYear, monthIndex, day);
+  }
+
 export default function HistoryPage() {
 
+    const { phone } = useLocalSearchParams();
+
     const [menuOpen, setMenuOpen] = useState(false);
+
+    const [user, setUser] = useState<any>(null);
+
+    const { expenses, setExpenses, graphsData } = useExpenses();
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
 
     const [dateFilter, setDateFilter] = useState("This Week");
     const [sortBy, setSortBy] = useState("date");
@@ -43,13 +91,59 @@ export default function HistoryPage() {
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
 
+    const loadExpenses = async (phoneString: string) => {
+        try {
+          const expensesRef = collection(db, "users", phoneString, "expenses");
+          const expSnap = await getDocs(expensesRef);
+          const expList = expSnap.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+    
+          setExpenses(expList);
+        
+          return expList;
+
+        } catch (error) {
+          console.error("Error loading expenses:", error);
+          throw error;
+        }
+    };
+
+    useEffect(() => {
+        if (!phone) return;
+    
+        async function loadData() {
+          setLoading(true);
+          try {
+            const userRef = doc(db, "users", phone as string);
+            const snap = await getDoc(userRef);
+    
+            if (!snap.exists()) {
+              setError("User not found");
+              setLoading(false);
+              return;
+            }
+    
+            setUser(snap.data());
+            await loadExpenses(phone as string);
+            setLoading(false);
+          } catch {
+            setError("Failed to load data");
+            setLoading(false);
+          }
+        }
+    
+        loadData();
+    }, [phone]);
+
     // Filter expenses based on date filter
     const getFilteredExpenses = () => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
         return expenses.filter((expense) => {
-            const expenseDate = new Date(expense.date);
+            const expenseDate = parseDateString(expense.date);
             expenseDate.setHours(0, 0, 0, 0);
             
             if (dateFilter === "This Week") {
@@ -85,9 +179,10 @@ export default function HistoryPage() {
 
         if (sortBy === "date") {
             return sortDirection === "asc"
-                ? new Date(a.date).getTime() - new Date(b.date).getTime()
-                : new Date(b.date).getTime() - new Date(a.date).getTime();
+                ? parseDateString(a.date).getTime() - parseDateString(b.date).getTime()
+                : parseDateString(b.date).getTime() - parseDateString(a.date).getTime();
         }
+        
 
         if (sortBy === "category") {
             return sortDirection === "asc" 
@@ -230,9 +325,17 @@ export default function HistoryPage() {
                     <Text style={styles.category}>
                         {getCategoryEmoji(item.category)} {item.category}
                     </Text>
+                    
+                    {item.type && item.type.trim() !== "" ? (
                     <Text style={styles.details2}>
-                    {item.payment} • {item.type} • {item.date}
+                        {item.payment} • {item.type} • {item.date}
                     </Text>
+                    ) : (
+                    <Text style={styles.details2}>
+                        {item.payment} • {item.date}
+                    </Text>
+                    )}
+
                     {item.note ? (
                     <Text style={styles.note}>Note: {item.note}</Text>
                     ) : null}
@@ -245,6 +348,14 @@ export default function HistoryPage() {
 
         </View>
     );
+
+    if (loading) {
+        return (
+          <View style={styles.mainContainer}>
+            <Text style={{ color: PRIMARY }}>Loading...</Text>
+          </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -313,7 +424,11 @@ export default function HistoryPage() {
                 />
             )}
             
-            <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
+            <SideMenu 
+                visible={menuOpen} 
+                onClose={() => setMenuOpen(false)} 
+                phone={phone as string}
+            />
         </View>
     );
 }
@@ -324,27 +439,33 @@ const styles = StyleSheet.create({
         backgroundColor: LIGHT_BG,
     },
 
+    mainContainer: {
+        marginTop: 10,
+        flexDirection: "column",
+        alignItems: "center",
+      },
+
     filterBar: {
         flexDirection: "row",
-        padding: 10,
+        padding: scaleSize(10),
         justifyContent: "space-around",
     },
 
     filterBtn: {
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 12,
+        paddingVertical: scaleSize(6),
+        paddingHorizontal: scaleSize(10),
+        borderRadius: scaleSize(12),
     },
 
     filterText: {
-        fontSize: 15,
+        fontSize: scaleFont(15),
         color: PRIMARY,
         fontWeight: "600",
     },
 
     sortBar: {
         flexDirection: "row",
-        padding: 10,
+        padding: scaleSize(10),
         justifyContent: "space-around",
         // backgroundColor: "white",
         // borderBottomWidth: 1.5,
@@ -352,22 +473,22 @@ const styles = StyleSheet.create({
     },
 
     sortBtn: {
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 12,
+        paddingVertical: scaleSize(6),
+        paddingHorizontal: scaleSize(10),
+        borderRadius: scaleSize(12),
     },
 
     sortText: {
-        fontSize: 13,
+        fontSize: scaleFont(13),
         color: PRIMARY,
         fontWeight: "600",
     },
 
     card: {
         backgroundColor: "white",
-        padding: 15,
-        borderRadius: 15,
-        marginBottom: 15,
+        padding: scaleSize(15),
+        borderRadius: scaleSize(15),
+        marginBottom: scaleSize(15),
 
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 3 },
@@ -388,13 +509,13 @@ const styles = StyleSheet.create({
     },
 
     category: {
-        fontSize: 16,
+        fontSize: scaleFont(16),
         fontWeight: "600",
         color: PRIMARY,
     },
 
     price: {
-        fontSize: 18,
+        fontSize: scaleFont(18),
         fontWeight: "700",
         marginTop: 4,
     },
@@ -405,7 +526,7 @@ const styles = StyleSheet.create({
     },
 
     note: {
-        marginTop: 6,
+        marginTop: scaleSize(6),
         color: "#666",
         fontStyle: "italic",
     },
@@ -418,14 +539,14 @@ const styles = StyleSheet.create({
 
     modalContent: {
         backgroundColor: "white",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        paddingBottom: 40,
+        borderTopLeftRadius: scaleSize(20),
+        borderTopRightRadius: scaleSize(20),
+        padding: scaleSize(20),
+        paddingBottom: scaleSize(40),
     },
 
     modalTitle: {
-        fontSize: 18,
+        fontSize: scaleFont(18),
         fontWeight: "600",
         color: PRIMARY,
         marginBottom: 20,
@@ -435,7 +556,7 @@ const styles = StyleSheet.create({
     pickerContainer: {
         alignItems: "center",
         justifyContent: "center",
-        marginVertical: 10,
+        marginVertical: scaleSize(10),
     },
 
     modalButtons: {
@@ -446,8 +567,8 @@ const styles = StyleSheet.create({
 
     modalButton: {
         flex: 1,
-        paddingVertical: 12,
-        borderRadius: 12,
+        paddingVertical: scaleSize(12),
+        borderRadius: scaleSize(12),
         alignItems: "center",
     },
 

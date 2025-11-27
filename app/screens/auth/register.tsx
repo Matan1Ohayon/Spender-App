@@ -1,17 +1,23 @@
+import AuthHero from "@/components/AuthHero";
+import { db } from "@/firebase";
+import { scaleFont, scaleSize } from "@/utils/scale";
+import bcrypt from "bcryptjs";
 import { Link, router } from "expo-router";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
 import {
-    Image,
-    Keyboard,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import ErrorMessage from "../../../components/ErrorMessage";
 import PasswordInput from "../../../components/PasswordInput";
+
+const DEFAULT_AVATAR = "https://files.catbox.moe/9uqgm9.png";
 
 const PRIMARY = "#390492";
 const ACCENT = "#8b73ff";
@@ -47,6 +53,8 @@ export default function Register() {
     const [phone, setPhone] = useState("");
     const [pass, setPass] = useState("");
     const [confirmPass, setConfirmPass] = useState("");
+    const [loading, setLoading] = useState(false);
+
 
     const nameRef = useRef<TextInput>(null);
     const phoneRef = useRef<TextInput>(null);
@@ -60,35 +68,45 @@ export default function Register() {
     async function handleRegister() {
         const err = validateRegister(name, phone, pass, confirmPass);
         if (err) {
+            setLoading(false);
             setError(err);
             setTimeout(() => setError(""), 3500);
-            return;
+            return; 
         }
         setError("");  
-
+        setLoading(true);
+        
         try {
 
-            const response = await fetch("https://spender-app-five.vercel.app/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    phone,
-                    password: pass,
-                    name
-                })
-            });
+            //hash 
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(pass, saltRounds)
+            
+            const cleanPhone = phone.replace(/\D/g, "");
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                setError(data.error || "Registration failed");
+            const userRef = doc(db, "users", cleanPhone);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                setLoading(false);
+                setError("Phone number is already registered.");
                 return;
             }
+
+            await setDoc(doc(db, "users", cleanPhone), {
+                name,
+                phone : cleanPhone,
+                password: hashedPassword, 
+                avatar : DEFAULT_AVATAR,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+              });
+            setLoading(false);
+
 
             console.log("REGISTER IS OK : ", phone);
             router.push({
                 pathname: "/screens/auth/otp",
-                params: { phone, page }
+                params: { phone: cleanPhone, page }
             });
 
         } catch (err : any) {
@@ -102,17 +120,8 @@ export default function Register() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-  
-            <View style={styles.topSection}>
-                <View style={styles.logoContainer}>
-                <Image
-                    source={require("../../../assets/images/Theme.png")}
-                    style={styles.logo}
-                /> 
-                <Text style={styles.greeting}>Let's sign up!</Text>
-                <Text style={styles.subGreeting}>Quick setup. Big impact.</Text>
-                </View>
-            </View>
+
+            <AuthHero title="Let's sign up!" subtitle="Quick setup. Big impact." titleVariant="medium" />
   
             <View style={styles.bottomSection}>
 
@@ -161,9 +170,20 @@ export default function Register() {
     
                 {error !== "" && <ErrorMessage message={error} />}
 
-                <TouchableOpacity style={styles.loginButton} onPress={handleRegister}>
+                {/* <TouchableOpacity style={styles.loginButton} onPress={handleRegister}>
                     <Text style={styles.loginText}>Register</Text>
+                </TouchableOpacity> */}
+
+                <TouchableOpacity
+                    style={[styles.loginButton, loading && { opacity: 0.6 }]}
+                    onPress={!loading ? handleRegister : undefined}
+                    disabled={loading}
+                >
+                    <Text style={styles.loginText}>
+                        {loading ? "Processing..." : "Register"}
+                    </Text>
                 </TouchableOpacity>
+
     
                 <Text style={styles.signupText}>
                     Already have an account?{" "}
@@ -184,81 +204,39 @@ export default function Register() {
       backgroundColor: LIGHT_BG,
     },
   
-    topSection: {
-      backgroundColor: PRIMARY,
-      height: "40%",
-      width: "100%",
-      marginTop: -70,
-      paddingTop: 70,
-      paddingLeft: 25,
-      transform: [{ skewY: "10deg" }],
-      overflow: "hidden",
-    },
-  
-    logo: {
-      width: 100,
-      height: 100,
-      position: "absolute",
-      top: 20,
-      right: 25,
-      zIndex: 10,
-    },
-    logoContainer: {
-      transform: [{ skewY: "-10deg" }],
-    },
-  
-    greeting: {
-      fontSize: 50,
-      fontFamily: "DMSans_700Bold",
-      fontWeight: "900",
-      color: LIGHT_BG,
-      textShadowColor: LIGHT_BG,
-      textShadowRadius: 5,
-      marginBottom: 5,
-      marginTop: 115,
-    },
-
-    subGreeting: {
-        fontSize: 25,
-        fontFamily: "DMSans_700Bold",
-        color: LIGHT_BG,
-        textShadowColor: LIGHT_BG,
-        textShadowRadius: 5,
-    },
-  
     bottomSection: {
-      marginTop: 50,
-      paddingHorizontal: 30,
+      marginTop: scaleSize(-10),
+      paddingHorizontal: scaleSize(30),
     },
   
     input: {
       borderBottomWidth: 2,
       borderBottomColor: PRIMARY,
-      paddingVertical: 14,
+      paddingVertical: scaleSize(14),
       fontFamily: "DMSans_400Regular",
-      fontSize: 16,
-      marginBottom: 25,
+      fontSize: scaleFont(16),
+      marginBottom: scaleSize(25),
       color: PRIMARY,
     },
   
     loginButton: {
       backgroundColor: PRIMARY,
-      paddingVertical: 14,
-      borderRadius: 20,
+      paddingVertical: scaleSize(14),
+      borderRadius: scaleSize(20),
       alignItems: "center",
-      marginTop: 25,
+      marginTop: scaleSize(25),
     },
   
     loginText: {
       color: "white",
       fontFamily: "DMSans_700Bold",
-      fontSize: 18,
+      fontSize: scaleFont(18),
     },
   
     signupText: {
-      marginTop: 20,
+      marginTop: scaleSize(20),
       textAlign: "center",
-      fontSize: 15,
+      fontSize: scaleFont(15),
       color: PRIMARY,
       fontFamily: "DMSans_400Regular",
     },

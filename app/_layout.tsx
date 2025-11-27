@@ -2,6 +2,7 @@ import { Slot } from "expo-router";
 import React, { useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import LoadingScreen from "./screens/LoadingScreen";
+import { ExpensesProvider } from "@/contexts/ExpensesContext";
 
 
 export default function Layout() {
@@ -17,7 +18,9 @@ export default function Layout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Slot />
+      <ExpensesProvider>
+        <Slot />
+      </ExpensesProvider>
     </GestureHandlerRootView>
   );
 }

@@ -1,5 +1,4 @@
 import { achievementsList } from "@/_data/achievementsList";
-import { expenses, graphsData, mockUserData, wastePerDay, weeklyStats } from "@/_data/insightsMockData";
 import Header from "@/components/Header";
 import AchievementsSection from "@/components/insights/AchievementsSection";
 import GraphsSection from "@/components/insights/GraphsSection";
@@ -7,10 +6,17 @@ import InsightOfWeek from "@/components/insights/InsightOfWeek";
 import PatternsSection from "@/components/insights/PatternsSection";
 import ProgressSection from "@/components/insights/ProgressTrackerSection";
 import SideMenu from "@/components/SideMenu";
-import { checkUserAchievements } from "@/logic/achievementsEngine";
+import { useExpenses } from "@/contexts/ExpensesContext";
+import { db } from "@/firebase";
+import { checkNewAchievements } from "@/logic/achievementsEngine";
 import { generateInsightOfTheWeek } from "@/logic/insightEngine";
 import { detectPatterns } from "@/logic/patternEngine";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import {
+  doc,
+  getDoc
+} from "firebase/firestore";
+import { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -20,15 +26,53 @@ import {
 const PRIMARY = "#390492";
 const LIGHT_BG = "#efe7ff";
 
+
 export default function insightsPage() {
 
-    const [menuOpen, setMenuOpen] = useState(false);
+  const { phone } = useLocalSearchParams();
 
-    const insight = generateInsightOfTheWeek(weeklyStats);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-    const unlockedIds = checkUserAchievements(mockUserData);
+  const [user, setUser] = useState<any>(null);
 
-    const patterns = detectPatterns(expenses);
+  const { expenses, setExpenses, graphsData } = useExpenses();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+      if (!phone) return;
+
+      async function loadData() {
+        setLoading(true);
+        try {
+          const userRef = doc(db, "users", phone as string);
+          const snap = await getDoc(userRef);
+
+          if (!snap.exists()) {
+            setError("User not found");
+            setLoading(false);
+            return;
+          }
+
+          setUser(snap.data());
+          setLoading(false);
+        } catch {
+          setError("Failed to load data");
+          setLoading(false);
+        }
+      }
+
+      loadData();
+  }, [phone]);
+
+  const insight = generateInsightOfTheWeek(expenses);
+
+  const unlockedAchievements = user?.unlockedAchievements ?? [];
+
+  const newUnlockedAchievements= checkNewAchievements(expenses, unlockedAchievements);
+
+  const patterns = detectPatterns(expenses);
 
 
   return (
@@ -45,13 +89,17 @@ export default function insightsPage() {
         <View style={styles.restMain}>
           <InsightOfWeek data={insight} />
           <GraphsSection mode="full" data={graphsData} />
-          <AchievementsSection data={achievementsList} unlockedIds={unlockedIds} />
-          <ProgressSection wastePerDay={wastePerDay} />
+          <AchievementsSection data={achievementsList} unlockedAchievements={newUnlockedAchievements} />
+          <ProgressSection expenses={expenses} />
           <PatternsSection data={patterns} />
         </View>
       </ScrollView>
 
-      <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
+      <SideMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        phone={phone as string}
+      />
     </View>
   );
 }

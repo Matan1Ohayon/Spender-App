@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, View } from "react-native";
+import 'react-native-get-random-values';
 import { loadingStyles as styles } from "../../styles/LoadingScreen";
+
 
 type LoadingProps = {
   onFinish: () => void;

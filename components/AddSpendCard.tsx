@@ -1,15 +1,19 @@
+import AndroidWheelPicker from "@/components/AndroidWheelPicker";
 import ErrorMessage from "@/components/ErrorMessage";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useEffect, useState } from "react";
 import {
     Keyboard,
-    Modal, Platform, StyleSheet,
+    Modal,
+    Platform,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View
+    View,
 } from "react-native";
 
 const PRIMARY = "#390492";
@@ -75,6 +79,7 @@ export default function AddSpendCard({
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [showPaymentPicker, setShowPaymentPicker] = useState(false);
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     // Auto-hide error message after 1.5 seconds
     useEffect(() => {
@@ -86,6 +91,18 @@ export default function AddSpendCard({
             return () => clearTimeout(timer);
         }
     }, [error]);
+
+    useEffect(() => {
+        if (Platform.OS !== "android") {
+            return;
+        }
+        const showSub = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     function handleCancel() {
         // סגירת כל ה-pickers
@@ -139,7 +156,14 @@ export default function AddSpendCard({
                 onRequestClose={handleCancel}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.modalOverlay}>
+                    <View
+                        style={[
+                            styles.modalOverlay,
+                            Platform.OS === "android" && {
+                                paddingBottom: keyboardVisible ? scaleSize(40) : scaleSize(200),
+                            },
+                        ]}
+                    >
                         <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                             <View style={styles.card}>
                                 {/* TOP BAR */}
@@ -291,15 +315,25 @@ export default function AddSpendCard({
                                     <Text style={styles.modalDoneText}>Done</Text>
                                 </TouchableOpacity>
                             </View>
-                            <Picker
-                                selectedValue={category}
-                                onValueChange={(itemValue) => setCategory(itemValue)}
-                                style={styles.modalPicker}
-                            >
-                                {categories.map((cat) => (
-                                    <Picker.Item key={cat} label={getCategoryWithEmoji(cat)} value={cat} />
-                                ))}
-                            </Picker>
+                            {Platform.OS === "ios" ? (
+                                <Picker
+                                    selectedValue={category}
+                                    onValueChange={(itemValue) => setCategory(itemValue)}
+                                    style={styles.modalPicker}
+                                >
+                                    {categories.map((cat) => (
+                                        <Picker.Item key={cat} label={getCategoryWithEmoji(cat)} value={cat} />
+                                    ))}
+                                </Picker>
+                            ) : (
+                                <AndroidWheelPicker
+                                    items={categories}
+                                    selectedValue={category}
+                                    onValueChange={setCategory}
+                                    visible={showCategoryPicker}
+                                    labelFormatter={getCategoryWithEmoji}
+                                />
+                            )}
                         </View>
                     </View>
                 </Modal>
@@ -326,15 +360,24 @@ export default function AddSpendCard({
                                     <Text style={styles.modalDoneText}>Done</Text>
                                 </TouchableOpacity>
                             </View>
-                            <Picker
-                                selectedValue={payment}
-                                onValueChange={(itemValue) => setPayment(itemValue)}
-                                style={styles.modalPicker}
-                            >
-                                {paymentMethods.map((pm) => (
-                                    <Picker.Item key={pm} label={pm} value={pm} />
-                                ))}
-                            </Picker>
+                            {Platform.OS === "ios" ? (
+                                <Picker
+                                    selectedValue={payment}
+                                    onValueChange={(itemValue) => setPayment(itemValue)}
+                                    style={styles.modalPicker}
+                                >
+                                    {paymentMethods.map((pm) => (
+                                        <Picker.Item key={pm} label={pm} value={pm} />
+                                    ))}
+                                </Picker>
+                            ) : (
+                                <AndroidWheelPicker
+                                    items={paymentMethods}
+                                    selectedValue={payment}
+                                    onValueChange={setPayment}
+                                    visible={showPaymentPicker}
+                                />
+                            )}
                         </View>
                     </View>
                 </Modal>
@@ -349,17 +392,17 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0, 0, 0, 0.5)",
         justifyContent: "flex-end",
         alignItems: "center",
-        padding: 20,
-        paddingBottom: 350,
+        padding: scaleSize(20),
+        paddingBottom: scaleSize(350),
     },
 
     card: {
         width: "100%",
-        maxWidth: 350,
-        height: 430,
+        maxWidth: scaleSize(350),
+        height: scaleSize(430),
         backgroundColor: "white",
-        borderRadius: 35,
-        padding: 25,
+        borderRadius: scaleSize(35),
+        padding: scaleSize(25),
         shadowColor: "#000",
         shadowOpacity: 0.15,
         shadowRadius: 25,
@@ -393,33 +436,33 @@ const styles = StyleSheet.create({
 
     errorContainer: {
         position: "absolute",
-        top: 60,
+        top: scaleSize(60),
         left: 0,
         right: 0,
         zIndex: 10000,
         elevation: 25,
         width: "100%",
-        paddingHorizontal: 10,
+        paddingHorizontal: scaleSize(10),
         pointerEvents: "none",
     },
 
     amountInput: {
-        fontSize: 32,
+        fontSize: scaleFont(32),
         color: PRIMARY,
         borderBottomWidth: 1,
         borderBottomColor: "#ddd",
         width: "80%",
         textAlign: "center",
-        paddingVertical: 8,
+        paddingVertical: scaleSize(8),
     },
 
     datePickerButton: {
         width: "100%",
-        paddingVertical: 12,
-        paddingHorizontal: 14,
+        paddingVertical: scaleSize(12),
+        paddingHorizontal: scaleSize(14),
         borderWidth: 1,
         borderColor: "#ddd",
-        borderRadius: 10,
+        borderRadius: scaleSize(10),
         backgroundColor: "#F7F7F7",
         position: "relative",
         elevation: 5,
@@ -427,7 +470,7 @@ const styles = StyleSheet.create({
     },
 
     datePickerText: {
-        fontSize: 18,
+        fontSize: scaleFont(18),
         color: PRIMARY,
     },
 
@@ -440,25 +483,25 @@ const styles = StyleSheet.create({
 
     notesInput: {
         width: "100%",
-        paddingVertical: 12,
-        paddingHorizontal: 14,
+        paddingVertical: scaleSize(12),
+        paddingHorizontal: scaleSize(14),
         borderWidth: 1,
         borderColor: "#ddd",
-        borderRadius: 10,
+        borderRadius: scaleSize(10),
         backgroundColor: "#F7F7F7",
-        minHeight: 100,
-        fontSize: 16,
+        minHeight: scaleSize(100),
+        fontSize: scaleFont(16),
         color: PRIMARY,
         textAlignVertical: "top",
     },
 
     pickerButton: {
         width: "100%",
-        paddingVertical: 12,
-        paddingHorizontal: 14,
+        paddingVertical: scaleSize(12),
+        paddingHorizontal: scaleSize(14),
         borderWidth: 1,
         borderColor: "#ddd",
-        borderRadius: 10,
+        borderRadius: scaleSize(10),
         backgroundColor: "#F7F7F7",
         position: "relative",
         elevation: 5,
@@ -466,7 +509,7 @@ const styles = StyleSheet.create({
     },
 
     pickerButtonText: {
-        fontSize: 18,
+        fontSize: scaleFont(18),
         color: PRIMARY,
     },
 
@@ -478,62 +521,62 @@ const styles = StyleSheet.create({
 
     modalContent: {
         backgroundColor: "white",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingBottom: Platform.OS === "ios" ? 40 : 20,
+        borderTopLeftRadius: scaleSize(20),
+        borderTopRightRadius: scaleSize(20),
+        paddingBottom: Platform.OS === "ios" ? scaleSize(40) : scaleSize(20),
     },
 
     modalHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingHorizontal: 20,
-        paddingVertical: 15,
+        paddingHorizontal: scaleSize(20),
+        paddingVertical: scaleSize(15),
         borderBottomWidth: 1,
         borderBottomColor: "#eee",
     },
 
     modalTitle: {
-        fontSize: 18,
+        fontSize: scaleFont(18),
         fontWeight: "600",
         color: PRIMARY,
     },
 
     modalCancelText: {
-        fontSize: 16,
+        fontSize: scaleFont(16),
         color: "#666",
     },
 
     modalDoneText: {
-        fontSize: 16,
+        fontSize: scaleFont(16),
         color: PRIMARY,
         fontWeight: "600",
     },
 
     modalPicker: {
         width: "100%",
-        height: Platform.OS === "ios" ? 200 : 200,
+        height: Platform.OS === "ios" ? scaleSize(200) : scaleSize(200),
     },
 
     datePickerContainer: {
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 20,
+        paddingVertical: scaleSize(20),
     },
 
     buttonsRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginTop: 10,
+        marginTop: scaleSize(10),
         gap: 10,
     },
 
     cancelBtn: {
         flex: 1,
         backgroundColor: "#ccc",
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-        borderRadius: 10,
+        paddingHorizontal: scaleSize(18),
+        paddingVertical: scaleSize(10),
+        borderRadius: scaleSize(10),
         alignItems: "center",
     },
 
@@ -545,9 +588,9 @@ const styles = StyleSheet.create({
     saveBtn: {
         flex: 1,
         backgroundColor: PRIMARY,
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-        borderRadius: 10,
+        paddingHorizontal: scaleSize(18),
+        paddingVertical: scaleSize(10),
+        borderRadius: scaleSize(10),
         alignItems: "center",
     },
 

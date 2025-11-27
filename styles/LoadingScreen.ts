@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { scaleSize } from "@/utils/scale";
 
 export const loadingStyles = StyleSheet.create({
   container: {
@@ -10,8 +11,8 @@ export const loadingStyles = StyleSheet.create({
   logo: {
     width: "80%",
     height: undefined,
-    aspectRatio: 1,  
-    marginBottom: 20,
+    aspectRatio: 1,
+    marginBottom: scaleSize(20),
     resizeMode: "contain",
-  },  
+  },
 });

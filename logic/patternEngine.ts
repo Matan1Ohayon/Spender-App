@@ -1,5 +1,5 @@
 // ===============================
-// 📌 INTERFACES
+// INTERFACES
 // ===============================
 
 export interface Expense {
@@ -7,9 +7,10 @@ export interface Expense {
     amount: number;
     type: "good" | "waste";
     category: string;
-    date: string;  // "2025-11-05"
+    date: string;     // "Jan 12" 
     payment?: string;  // "card" | "cash" | "bit"
     note?:string;
+    dateISO?: string; 
   }
   
   export interface SpendingPattern {
@@ -29,8 +30,25 @@ export interface Expense {
     percent: number;
   }
   
+
+  function parseExpenseDate(exp: Expense): Date {
+    if (exp.dateISO) return new Date(exp.dateISO);
+  
+    if (exp.date) {
+      const [month, day] = exp.date.split(" ");
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul",
+                      "Aug","Sep","Oct","Nov","Dec"];
+      const m = months.indexOf(month);
+      const d = parseInt(day);
+      const y = new Date().getFullYear();
+      return new Date(y, m, d);
+    }
+  
+    return new Date(0);
+  }
+
   // ===============================
-  // 📌 MAIN PATTERN ENGINE
+  // MAIN PATTERN ENGINE
   // ===============================
   
   export function detectPatterns(expenses: Expense[]): SpendingPattern[] {
@@ -59,6 +77,7 @@ export interface Expense {
 
       // Rule 3 — Weekend unnecessary spending
     const weekend = weekendPattern(expenses);
+
     if (weekend) {
         patterns.push({
         id: patterns.length + 1,
@@ -77,7 +96,9 @@ export interface Expense {
     const map: Record<string, { total: number; unnecessary: number }> = {};
   
     expenses.forEach((exp) => {
-      const day = new Date(exp.date).toLocaleDateString("en-US", {
+      const d = parseExpenseDate(exp);
+  
+      const day = d.toLocaleDateString("en-US", {
         weekday: "long",
       });
   
@@ -129,24 +150,24 @@ export interface Expense {
   }
 
   function weekendPattern(expenses: Expense[]): string | null {
-    const waste = expenses.filter((e) => e.type === "waste");
-    if (waste.length === 0) return null;
-  
-    let weekendCount = 0;
-  
-    waste.forEach((e) => {
-      const day = new Date(e.date).getDay(); 
-      // 0 = Sunday, 6 = Saturday
-      if (day === 0 || day === 6) weekendCount++;
-    });
-  
-    const percent = Math.round((weekendCount / waste.length) * 100);
-  
-    if (percent >= 50) {
-      return `${percent}% of your unnecessary spending occurs on weekends.`;
-    }
-  
-    return null;
+  const waste = expenses.filter((e) => e.type === "waste");
+  if (waste.length === 0) return null;
+
+  let weekendCount = 0;
+
+  waste.forEach((e) => {
+    const d = parseExpenseDate(e);
+    const day = d.getDay(); // 0=Sunday, 6=Saturday
+    if (day === 0 || day === 6) weekendCount++;
+  });
+
+  const percent = Math.round((weekendCount / waste.length) * 100);
+
+  if (percent >= 50) {
+    return `${percent}% of your unnecessary spending occurs on weekends.`;
   }
+
+  return null;
+}
   
   

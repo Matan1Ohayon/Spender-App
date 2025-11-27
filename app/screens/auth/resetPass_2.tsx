@@ -1,16 +1,18 @@
+import AuthHero from "@/components/AuthHero";
 import { db } from "@/firebase";
+import { scaleFont, scaleSize } from "@/utils/scale";
+import bcrypt from "bcryptjs";
 import { router, useLocalSearchParams } from "expo-router";
-import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
 import {
-  Image,
   Keyboard,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 import ErrorMessage from "../../../components/ErrorMessage";
 import PasswordInput from "../../../components/PasswordInput";
@@ -45,6 +47,8 @@ export default function resetPass_2() {
 
     const [error, setError] = useState("");
 
+    const [loading, setLoading] = useState(false);
+
 
     async function handleReset() {
       const err = validateReset(pass, confirmPass);
@@ -54,28 +58,33 @@ export default function resetPass_2() {
         return;
       }
       setError("");
+      setLoading(true);
+
         
       try {
         const phoneNumber = String(phone);
+        
+        const saltRounds = 10;
+        const hashed = await bcrypt.hash(pass,saltRounds )
+        
         const userRef = doc(db, "users", phoneNumber);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          setError("Phone not found");
-          return;
-        }
         
         await updateDoc(userRef, {
-          password: pass,
+          password: hashed,
           updated_at: serverTimestamp(),
         });
-        
-        console.log("reset 2 OK");
-        router.replace("/screens/home/homePage");
+
+        console.log("LOGIN OK:", phoneNumber);
+        router.replace({
+          pathname : "/screens/home/homePage",
+          params: { phone : phoneNumber }
+        });
 
 
-      } catch (error) {
-          console.log("Error saving user:", error);
+      } catch (err) {
+          console.log(err);
+          setError("Something went wrong.");
+          setLoading(false);
       }
       
     }
@@ -84,16 +93,8 @@ export default function resetPass_2() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-  
-          <View style={styles.topSection}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("../../../assets/images/Theme.png")}
-                style={styles.logo}
-              /> 
-              <Text style={styles.greeting}>Choose your new password</Text>
-            </View>
-          </View>
+
+          <AuthHero title="Choose your new password" titleVariant="medium" />
   
           {/* תחתית רכה */}
           <View style={styles.bottomSection}>
@@ -118,8 +119,14 @@ export default function resetPass_2() {
   
             {error !== "" && <ErrorMessage message={error} />}
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleReset}>
-              <Text style={styles.loginText}>Reset Password</Text>
+            <TouchableOpacity
+              style={[styles.loginButton, loading && { opacity: 0.6 }]}
+              onPress={!loading ? handleReset : undefined}
+              disabled={loading}
+            >
+              <Text style={styles.loginText}>
+                {loading ? "Updating..." : "Reset Password"}
+              </Text>
             </TouchableOpacity>
   
           </View>
@@ -136,58 +143,24 @@ export default function resetPass_2() {
     },
   
     // החלק העליון האלכסוני
-    topSection: {
-      backgroundColor: PRIMARY,
-      height: "40%",
-      width: "100%",
-      marginTop: -70,
-      paddingTop: 70,
-      paddingLeft: 25,
-      transform: [{ skewY: "10deg" }],
-      overflow: "hidden",
-    },
-  
-    logo: {
-      width: 100,
-      height: 100,
-      position: "absolute",
-      top: 20,
-      right: 25,
-      zIndex: 10,
-    },
-    logoContainer: {
-      transform: [{ skewY: "-10deg" }],
-    },
-  
-    greeting: {
-      fontSize: 50,
-      fontFamily: "DMSans_700Bold",
-      fontWeight: "900",
-      color: LIGHT_BG,
-      textShadowColor: LIGHT_BG,
-      textShadowRadius: 5,
-      marginBottom: 5,
-      marginTop: 115,
-    },
-  
     bottomSection: {
-      marginTop: 50,
-      paddingHorizontal: 30,
+      marginTop: scaleSize(-10),
+      paddingHorizontal: scaleSize(30),
     },
 
   
     loginButton: {
       backgroundColor: PRIMARY,
-      paddingVertical: 14,
-      borderRadius: 20,
+      paddingVertical: scaleSize(14),
+      borderRadius: scaleSize(20),
       alignItems: "center",
-      marginTop: 25,
+      marginTop: scaleSize(25),
     },
   
     loginText: {
       color: "white",
       fontFamily: "DMSans_700Bold",
-      fontSize: 18,
+      fontSize: scaleFont(18),
     },
 
   });

@@ -1,15 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
+import AuthHero from "@/components/AuthHero";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import {
-    Image,
-    Keyboard,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import ErrorMessage from "../../../components/ErrorMessage";
 
@@ -21,7 +21,6 @@ const LIGHT_BG = "#efe7ff";
 
 
 export default function Otp() {
-
   const { phone , page } = useLocalSearchParams();
 
   const beforePage = page;
@@ -46,15 +45,18 @@ export default function Otp() {
       setTimeout(() => setError(""), 3000);
       return;
     }
-   // 🔥 OTP קבוע – 123456
+   // OTP קבוע – 123456
    if (code === "123456") {
     if (beforePage === "login" || beforePage === "register") {
-      router.replace("/screens/home/homePage");
-    } else {
-      router.push({
-        pathname: "/screens/auth/resetPass_2",
-        params: { phone },
+      router.replace({
+        pathname : "/screens/home/homePage",
+        params: { phone }
       });
+    } else {
+        router.replace({
+            pathname : "/screens/auth/resetPass_2",
+            params: { phone }
+        });
     }
   } else {
     setError("Wrong OTP");
@@ -113,22 +115,13 @@ export default function Otp() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
 
-                <TouchableOpacity 
-                style={styles.backButton} 
-                onPress={() => router.back()}
-                >
-                <Ionicons name="arrow-back" size={28} color="white" />
-                </TouchableOpacity>
+                <AuthHero
+                    title="We're almost done"
 
-                <View style={styles.topSection}>
-                <View style={styles.logoContainer}>
-                    <Image
-                    source={require("../../../assets/images/Theme.png")}
-                    style={styles.logo}
-                    /> 
-                    <Text style={styles.greeting}>We’re almost done</Text>
-                </View>
-                </View>
+                    titleVariant="medium"
+                    showBackButton
+                    onBackPress={() => router.back()}
+                />
 
                 <View style={styles.bottomSection}>
                 <Text style={styles.title}>Verify your phone</Text>
@@ -176,93 +169,53 @@ const styles = StyleSheet.create({
     backgroundColor: LIGHT_BG,
   },
 
-  backButton: {
-    position: "absolute",
-    top: 60,
-    left: 25,
-    zIndex: 50,  
-    padding: 8,
-  },
-
-  topSection: {
-    backgroundColor: PRIMARY,
-    height: "40%",
-    width: "100%",
-    marginTop: -70,
-    paddingTop: 70,
-    paddingLeft: 25,
-    transform: [{ skewY: "10deg" }],
-    overflow: "hidden",
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    position: "absolute",
-    top: 20,
-    right: 25,
-    zIndex: 10,
-  },
-  logoContainer: {
-    transform: [{ skewY: "-10deg" }],
-  },
-  greeting: {
-    fontSize: 50,
-    fontFamily: "DMSans_700Bold",
-    fontWeight: "700",
-    color: LIGHT_BG,
-    textShadowColor: LIGHT_BG,
-    textShadowRadius: 5,
-    marginBottom: 40,
-    marginTop: 120,
-  },
-
   bottomSection: {
-    marginTop: 50,
-    paddingHorizontal: 30,
+    marginTop: scaleSize(-5),
+    paddingHorizontal: scaleSize(30),
   },
   title: {
-    fontSize: 32,
+    fontSize: scaleFont(32),
     fontFamily: "DMSans_700Bold",
     color: PRIMARY,
-    marginBottom: 15,
+    marginBottom: scaleSize(15),
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontFamily: "DMSans_400Regular",
     color: PRIMARY,
-    marginBottom: 15,
+    marginBottom: scaleSize(15),
   },
   boxRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: scaleSize(5),
   },
   otpBox: {
-    width: 50,
-    height: 60,
+    width: scaleSize(50),
+    height: scaleSize(60),
     borderWidth: 2,
     borderColor: PRIMARY,
-    borderRadius: 12,
+    borderRadius: scaleSize(12),
     textAlign: "center",
     fontFamily: "DMSans_700Bold",
-    fontSize: 28,
+    fontSize: scaleFont(28),
     color: PRIMARY,
     backgroundColor: "white",
   },
   button: {
     backgroundColor: PRIMARY,
-    paddingVertical: 14,
-    borderRadius: 20,
+    paddingVertical: scaleSize(14),
+    borderRadius: scaleSize(20),
     alignItems: "center",
-    marginTop: 30,
+    marginTop: scaleSize(30),
   },
   buttonText: {
     color: "white",
     fontFamily: "DMSans_700Bold",
-    fontSize: 18,
+    fontSize: scaleFont(18),
   },
   resend: {
-    marginTop: 20,
+    marginTop: scaleSize(20),
     color: PRIMARY,
     textAlign: "center",
     fontFamily: "DMSans_400Regular",

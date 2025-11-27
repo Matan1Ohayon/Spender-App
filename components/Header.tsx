@@ -1,6 +1,7 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { ReactNode } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { scaleSize } from "@/utils/scale";
 
 const PRIMARY = "#390492";
 
@@ -11,9 +12,15 @@ interface HeaderProps {
 
 export default function Header({ onMenuPress, children }: HeaderProps) {
 
+  const { phone } = useLocalSearchParams();
+
+
   async function logoPress() {
     await new Promise(res => setTimeout(res, 100));
-    router.replace("/screens/home/homePage");
+    router.replace({
+      pathname : "/screens/home/homePage",
+      params: { phone }
+    });
   }
 
   return (
@@ -40,10 +47,10 @@ export default function Header({ onMenuPress, children }: HeaderProps) {
 const styles = StyleSheet.create({
   header: {
     backgroundColor: PRIMARY,
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderRadius: 30,
+    paddingTop: scaleSize(60),
+    paddingBottom: scaleSize(20),
+    paddingHorizontal: scaleSize(20),
+    borderRadius: scaleSize(30),
   },
 
   headerTop: {
@@ -53,22 +60,22 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 130,
-    height: 40,
+    width: scaleSize(130),
+    height: scaleSize(40),
     resizeMode: "contain",
     tintColor: "PRIMARY",
   },
 
   menuCircle: {
-    width: 40,
-    height: 40,
+    width: scaleSize(40),
+    height: scaleSize(40),
     justifyContent: "center",
     alignItems: "center",
   },
 
   menuIcon: {
-    width: 30,
-    height: 30,
+    width: scaleSize(30),
+    height: scaleSize(30),
     justifyContent: "center",
     alignItems: "center",
   },

@@ -10,15 +10,14 @@ interface AchievementInput {
 
 interface AchievementsSectionProps {
   data: AchievementInput[];
-  unlockedIds: number[]; // מה שה-engine החזיר
-  forcedClosed?: number;
+  unlockedAchievements: number[]; 
 }
 
-export default function AchievementsSection({ data, unlockedIds, forcedClosed }: AchievementsSectionProps) {
+export default function AchievementsSection({ data, unlockedAchievements }: AchievementsSectionProps) {
 
   const fullList = data.map(a => ({
     ...a,
-    unlocked: unlockedIds.includes(a.id),
+    unlocked: unlockedAchievements.includes(a.id),
   }));
 
   const unlocked = fullList.filter(a => a.unlocked);
