@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "spender",
-    "slug": "spender",
+    "name": "Spender",
+    "slug": "Spender",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/Icon.png",
@@ -18,7 +18,11 @@
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -55,6 +59,19 @@
       "image": "./assets/images/Theme.png",
       "resizeMode": "contain",
       "backgroundColor": "#471396"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e3a12fd3-502a-4fc2-8b29-47468781c59b"
+      }
+    },
+    "owner": "matan1ohayon",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e3a12fd3-502a-4fc2-8b29-47468781c59b"
     }
   }
 }

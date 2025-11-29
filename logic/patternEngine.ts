@@ -1,14 +1,10 @@
-// ===============================
-// INTERFACES
-// ===============================
-
 export interface Expense {
     id: number;
     amount: number;
     type: "good" | "waste";
     category: string;
-    date: string;     // "Jan 12" 
-    payment?: string;  // "card" | "cash" | "bit"
+    date: string;     
+    payment?: string; 
     note?:string;
     dateISO?: string; 
   }
@@ -47,14 +43,10 @@ export interface Expense {
     return new Date(0);
   }
 
-  // ===============================
-  // MAIN PATTERN ENGINE
-  // ===============================
-  
-  export function detectPatterns(expenses: Expense[]): SpendingPattern[] {
+export function detectPatterns(expenses: Expense[]): SpendingPattern[] {
     const patterns: SpendingPattern[] = [];
   
-    // Rule 1 — Highest unnecessary spending day
+    // Rule 1 - Highest unnecessary spending day
     const byDay = groupByDay(expenses);
     const maxDay = findMaxDay(byDay);
   
@@ -65,7 +57,7 @@ export interface Expense {
       });
     }
   
-    // Rule 2 — Dominant category (e.g., deliveries)
+    // Rule 2 - Dominant category (e.g., deliveries)
     const cat = findDominantCategory(expenses);
   
     if (cat) {
@@ -75,7 +67,7 @@ export interface Expense {
       });
     }
 
-      // Rule 3 — Weekend unnecessary spending
+      // Rule 3 - Weekend unnecessary spending
     const weekend = weekendPattern(expenses);
 
     if (weekend) {
@@ -87,10 +79,7 @@ export interface Expense {
   
     return patterns;
   }
-  
-  // ===============================
-  // 📌 RULE HELPERS
-  // ===============================
+
   
   export function groupByDay(expenses: Expense[]): DayStats[] {
     const map: Record<string, { total: number; unnecessary: number }> = {};

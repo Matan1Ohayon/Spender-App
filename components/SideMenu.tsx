@@ -1,9 +1,8 @@
-// import { graphsData as mockGraphsData } from "@/_data/insightsMockData";
 import { useExpenses } from "@/contexts/ExpensesContext";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { scaleFont, scaleSize } from "@/utils/scale";
 import HistoryPreview from "./HistoryPreview";
 import GraphsSection from "./insights/GraphsSection";
 
@@ -98,7 +97,6 @@ export default function SideMenu({ visible, onClose, phone }: SideMenuProps) {
                 <Text style={styles.textSmall}>See more</Text>
           </TouchableOpacity>
           <View style={styles.sectionSpacer} />
-          {/* <Text style={styles.item}>Add spends from csv</Text> */}
         </View>
 
         <View style={styles.bottomArea}>
@@ -131,7 +129,7 @@ const styles = StyleSheet.create({
   },
 
   backdrop: {
-    width: "25%", // 100% - 75%
+    width: "25%", 
     height: SCREEN_HEIGHT,
     backgroundColor: "rgba(0,0,0,0.3)",
   },

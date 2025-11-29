@@ -15,7 +15,6 @@ import ErrorMessage from "../../../components/ErrorMessage";
 
 
 const PRIMARY = "#390492";
-const ACCENT = "#8b73ff";
 const LIGHT_BG = "#efe7ff";
 
 
@@ -64,7 +63,6 @@ export default function Otp() {
   }
 };
 
-  // שינוי של ספרה
   const handleChange = (text: string, index: number) => {
     if (text.length > 1) {
       const cleaned = text.replace(/\D/g, "");
@@ -91,7 +89,6 @@ export default function Otp() {
   };
   
 
-  // Backspace → חזרה אחורה
   const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === "Backspace") {
       if (otp[index] !== "") {

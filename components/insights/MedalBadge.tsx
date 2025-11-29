@@ -6,7 +6,7 @@ export interface Achievement {
   id: number;
   title: string;
   description: string;
-  unlocked: boolean;  // NEW FIELD
+  unlocked: boolean;  
 }
 
 interface MedalBadgeProps {
@@ -17,7 +17,7 @@ export function MedalBadge({ item }: MedalBadgeProps) {
   const flipAnim = useRef(new Animated.Value(0)).current;
 
   const handlePress = () => {
-    if (!item.unlocked) return; // ❌ נעול → לא מסתובב
+    if (!item.unlocked) return; 
 
     flipAnim.setValue(0);
     Animated.timing(flipAnim, {
@@ -51,7 +51,6 @@ export function MedalBadge({ item }: MedalBadgeProps) {
     >
       <Animated.View style={[styles.badge, animatedStyle]}>
         
-        {/* Outer ring */}
         <LinearGradient
           colors={item.unlocked 
             ? ["#4e2bb8", "#390492", "#1f005a"]
@@ -62,7 +61,6 @@ export function MedalBadge({ item }: MedalBadgeProps) {
           style={styles.outerRing}
         />
 
-        {/* Body */}
         <LinearGradient
           colors={metalColors}
           start={metalStart}
@@ -70,7 +68,6 @@ export function MedalBadge({ item }: MedalBadgeProps) {
           style={styles.metal}
         />
 
-        {/* Center glow */}
         <LinearGradient
           colors={["rgba(255,255,255,0.55)", "rgba(255,255,255,0)"]}
           style={styles.centerGlow}

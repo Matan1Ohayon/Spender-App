@@ -54,7 +54,7 @@ function getCategoryWithEmoji(category: string): string {
     return `${emoji} ${cleanCategory}`;
 }
 
-const paymentMethods = ["Credit Card", "Cash", "Debit Card", "Bit", "PayPal"];
+const paymentMethods = ["Credit Card", "Cash", "Debit Card", "Bank Transfer", "Bit/ PayBox", "PayPal"];
 
 function formatDate(date: Date): string {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -81,7 +81,6 @@ export default function AddSpendCard({
     const [showPaymentPicker, setShowPaymentPicker] = useState(false);
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-    // Auto-hide error message after 1.5 seconds
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => {
@@ -105,12 +104,10 @@ export default function AddSpendCard({
     }, []);
 
     function handleCancel() {
-        // סגירת כל ה-pickers
         setShowDatePicker(false);
         setShowCategoryPicker(false);
         setShowPaymentPicker(false);
         
-        // איפוס הערכים
         setAmount("");
         setCategory("Food");
         setPayment("Credit Card");
@@ -123,7 +120,6 @@ export default function AddSpendCard({
     }
 
     function handleSave() {
-        // ולידציה של הסכום
         const amountNum = parseFloat(amount);
         if (!amount || amount.trim() === "" || isNaN(amountNum) || amountNum <= 0) {
             setError("Please enter a valid amount greater than 0");
@@ -193,7 +189,6 @@ export default function AddSpendCard({
                                         />
                                     </View>
 
-                                    {/* Error Message - positioned absolutely to appear above all elements */}
                                     {error && (
                                         <View style={styles.errorContainer}>
                                             <ErrorMessage message={error} />

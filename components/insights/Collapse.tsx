@@ -12,7 +12,6 @@ export default function Collapse({ title, children }: CollapseProps) {
 
   return (
     <View style={styles.wrapper}>
-      {/* Header */}
       <TouchableOpacity style={styles.header} onPress={() => setOpen(!open)}>
         <Text style={styles.title}>{title}</Text>
         <Ionicons
@@ -22,7 +21,6 @@ export default function Collapse({ title, children }: CollapseProps) {
         />
       </TouchableOpacity>
 
-      {/* Body */}
       {open && <View style={styles.body}>{children}</View>}
     </View>
   );

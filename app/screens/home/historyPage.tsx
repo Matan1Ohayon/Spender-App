@@ -5,6 +5,7 @@ import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams } from "expo-router";
 
+import { scaleFont, scaleSize } from "@/utils/scale";
 import {
     collection,
     doc,
@@ -21,7 +22,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { scaleFont, scaleSize } from "@/utils/scale";
 
 
 
@@ -29,7 +29,8 @@ const PRIMARY = "#390492";
 const LIGHT_BG = "#efe7ff";
 
 const DATE_FILTERS = ["This Week", "This Month", "Range"];
-const SORT_OPTIONS = ["date", "price", "category", "type", "payment"];
+const TYPE_FILTERS = ["total", "waste", "worth it"];
+const SORT_OPTIONS = ["date", "price", "category", "payment"];
 
 const CATEGORY_EMOJIS: { [key: string]: string } = {
     "Food": "🍔",
@@ -84,6 +85,7 @@ export default function HistoryPage() {
 
 
     const [dateFilter, setDateFilter] = useState("This Week");
+    const [typeFilter, setTypeFilter] = useState("total");
     const [sortBy, setSortBy] = useState("date");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -137,7 +139,6 @@ export default function HistoryPage() {
         loadData();
     }, [phone]);
 
-    // Filter expenses based on date filter
     const getFilteredExpenses = () => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -146,27 +147,40 @@ export default function HistoryPage() {
             const expenseDate = parseDateString(expense.date);
             expenseDate.setHours(0, 0, 0, 0);
             
+            let dateMatch = false;
             if (dateFilter === "This Week") {
                 const weekAgo = new Date(today);
                 weekAgo.setDate(weekAgo.getDate() - 7);
-                return expenseDate >= weekAgo && expenseDate <= today;
-            }
-            
-            if (dateFilter === "This Month") {
+                dateMatch = expenseDate >= weekAgo && expenseDate <= today;
+            } else if (dateFilter === "This Month") {
                 const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-                return expenseDate >= monthStart && expenseDate <= today;
-            }
-            
-            if (dateFilter === "Range") {
+                dateMatch = expenseDate >= monthStart && expenseDate <= today;
+            } else if (dateFilter === "Range") {
                 if (!startDate || !endDate) return false;
                 const start = new Date(startDate);
                 start.setHours(0, 0, 0, 0);
                 const end = new Date(endDate);
                 end.setHours(23, 59, 59, 999);
-                return expenseDate >= start && expenseDate <= end;
+                dateMatch = expenseDate >= start && expenseDate <= end;
+            } else {
+                dateMatch = true;
             }
             
-            return true;
+            let typeMatch = false;
+            if (typeFilter === "total") {
+                typeMatch = true; // Show all
+            } else {
+                const expenseType = (expense.type || "").toLowerCase().trim();
+                if (typeFilter === "waste") {
+                    typeMatch = expenseType === "waste";
+                } else if (typeFilter === "worth") {
+                    typeMatch = expenseType === "worth";
+                } else {
+                    typeMatch = true;
+                }
+            }
+            
+            return dateMatch && typeMatch;
         });
     };
 
@@ -188,12 +202,6 @@ export default function HistoryPage() {
             return sortDirection === "asc" 
                 ? a.category.localeCompare(b.category)
                 : b.category.localeCompare(a.category);
-        }
-
-        if (sortBy === "type") {
-            return sortDirection === "asc" 
-                ? a.type.localeCompare(b.type)
-                : b.type.localeCompare(a.type);
         }
 
         if (sortBy === "payment") {
@@ -241,7 +249,6 @@ export default function HistoryPage() {
                 }
             }
         } else {
-            // iOS - update temp date as user scrolls
             if (selectedDate) {
                 setTempDate(selectedDate);
             }
@@ -282,6 +289,25 @@ export default function HistoryPage() {
                 >
                     <Text style={styles.filterText}>
                         {filter}
+                    </Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
+    const renderTypeFilterBar = () => (
+        <View style={styles.filterBar}>
+            {TYPE_FILTERS.map((filter) => (
+                <TouchableOpacity
+                    key={filter}
+                    style={[
+                        styles.filterBtn,
+                        typeFilter === filter && { backgroundColor: PRIMARY + "20" },
+                    ]}
+                    onPress={() => setTypeFilter(filter)}
+                >
+                    <Text style={styles.filterText}>
+                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
                     </Text>
                 </TouchableOpacity>
             ))}
@@ -336,8 +362,8 @@ export default function HistoryPage() {
                     </Text>
                     )}
 
-                    {item.note ? (
-                    <Text style={styles.note}>Note: {item.note}</Text>
+                    {item.notes ? (
+                    <Text style={styles.note}>Note: {item.notes}</Text>
                     ) : null}
                 </View>
                 <Text style={styles.price}>{item.amount} $</Text>
@@ -362,6 +388,7 @@ export default function HistoryPage() {
             <Header onMenuPress={() => setMenuOpen(true)} />
             
             {renderFilterBar()}
+            {renderTypeFilterBar()}
             {renderSortBar()}
 
             <ScrollView style={{ paddingHorizontal: 20 }}>
@@ -467,9 +494,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         padding: scaleSize(10),
         justifyContent: "space-around",
-        // backgroundColor: "white",
-        // borderBottomWidth: 1.5,
-        // borderBottomColor: PRIMARY,
     },
 
     sortBtn: {
@@ -506,6 +530,8 @@ const styles = StyleSheet.create({
     details1: {
         flexDirection: "column",
         justifyContent: "space-between",
+        flex: 1,
+        marginRight: scaleSize(10),
     },
 
     category: {
@@ -529,6 +555,7 @@ const styles = StyleSheet.create({
         marginTop: scaleSize(6),
         color: "#666",
         fontStyle: "italic",
+        flexShrink: 1,
     },
 
     modalOverlay: {

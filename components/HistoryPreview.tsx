@@ -11,7 +11,6 @@ import { Dimensions, StyleSheet, Text, View } from "react-native";
 interface HistoryPreviewProps {
   mode?: "preview";
   phone: string;
-  // expenses: any;
 }
 
 const CATEGORY_EMOJIS: { [key: string]: string } = {
@@ -110,7 +109,6 @@ export default function HistoryPreview({ mode = "preview", phone }: HistoryPrevi
     loadData();
   }, [phone]);
 
-  // מיון לפי תאריך - הכי חדש ראשון
   const sortedExpenses = [...expenses].sort((a, b) => {
     return parseDateString(b.date).getTime() - parseDateString(a.date).getTime();
   });

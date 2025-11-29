@@ -1,4 +1,6 @@
+import AuthHero from "@/components/AuthHero";
 import { db } from "@/firebase";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import { router } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
@@ -11,9 +13,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { scaleFont, scaleSize } from "@/utils/scale";
 import ErrorMessage from "../../../components/ErrorMessage";
-import AuthHero from "@/components/AuthHero";
 
 
 const PRIMARY = "#390492";
@@ -21,7 +21,6 @@ const ACCENT = "#8b73ff";
 const LIGHT_BG = "#efe7ff";
 
 function validateReset(phone: string) {
-    // Phone validations
     if (!phone || phone == "") return "Phone number is required.";
     if (!/^\d{10}$/.test(phone)) return "Phone number must contain exactly 10 digits.";
   

@@ -1,20 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { forwardRef, useState } from "react";
 import {
-    StyleSheet,
-    TextInput,
-    TextInputProps,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const PRIMARY = "#390492";
 
-// Props:
-// placeholder – טקסט
-// value – ערך הסיסמה מבחוץ
-// onChangeText – פונקציה שמשנה ערך מבחוץ
-// onSubmitEditing – מעבר לאינפוט הבא
 type PasswordInputProps = TextInputProps & {
   placeholder: string;
   value: string;
@@ -71,7 +66,7 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans_400Regular",
     fontSize: 16,
     color: PRIMARY,
-    paddingRight: 40, // מקום לאייקון
+    paddingRight: 40, 
   },
   icon: {
     position: "absolute",

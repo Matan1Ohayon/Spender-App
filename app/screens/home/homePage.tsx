@@ -26,7 +26,6 @@ import { scaleFont, scaleSize } from "@/utils/scale";
 const PRIMARY = "#390492";
 const LIGHT_BG = "#efe7ff";
 
-// ---------- Utility functions ----------
 function parseDateString(dateString: string): Date {
   const monthNames = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -68,7 +67,6 @@ function calculateWeeklySpending(expensesData: any[]): number {
   return weeklyExpenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0);
 }
 
-// ---------- MAIN COMPONENT ----------
 export default function HomePage() {
   const { phone } = useLocalSearchParams();
   const { expenses, setExpenses } = useExpenses();
@@ -282,7 +280,6 @@ export default function HomePage() {
   return (
     <View style={styles.container}>
       
-      {/* HEADER */}
       <Header onMenuPress={() => setMenuOpen(true)}>
         <View style={styles.headerRestL}>
           <Text style={styles.smallText}>Welcome back</Text>
@@ -308,7 +305,14 @@ export default function HomePage() {
       <View style={styles.mainContainer}>
         {error !== "" && <ErrorMessage message={error} />}
 
-        <Text style={styles.smallText2}>Swipe to sort your spendings</Text>
+        <Text style={[
+          styles.smallText2,
+          filteredExpenses.length === 0 && styles.emptyStateText
+        ]}>
+          {filteredExpenses.length === 0
+            ? "Add expenses and start sorting! \nSwipe left for waste expense and swipe right for expense that was worth it!"
+            : "Swipe to sort your spendings"}
+        </Text>
 
         <View style={styles.cardsArea}>
           <TinderStack
@@ -325,12 +329,10 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* ADD SPEND BUTTON */}
       <TouchableOpacity style={styles.addButton} onPress={handleAddSpend}>
         <Text style={styles.addButtonText}>add spend</Text>
       </TouchableOpacity>
 
-      {/* MODALS */}
       <AddSpendCard
         visible={showAddSpend}
         onClose={handleCloseAddSpend}
@@ -355,7 +357,6 @@ export default function HomePage() {
   );
 }
 
-// ---------- STYLES WITH SCALE APPLIED ----------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -424,6 +425,16 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
     color: PRIMARY,
     fontFamily: "DMSans_400Regular",
+    textAlign: "center",
+    paddingHorizontal: scaleSize(20),
+  },
+
+  emptyStateText: {
+    fontSize: scaleFont(16),
+    fontWeight: "600",
+    paddingHorizontal: scaleSize(30),
+    paddingVertical: scaleSize(10),
+    lineHeight: scaleFont(22),
   },
 
   cardsArea: {

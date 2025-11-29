@@ -27,9 +27,7 @@ export function buildGraphsData(expenses: Expense[]): GraphsData {
 
     const totalSorted = sortedExpenses.length;
 
-    // -------------------------
     // PIE DATA
-    // -------------------------
     const goodCount = sortedExpenses.filter((e) => e.type === "worth").length;
     const wasteCount = sortedExpenses.filter((e) => e.type === "waste").length;
 
@@ -43,9 +41,7 @@ export function buildGraphsData(expenses: Expense[]): GraphsData {
       pie.unnecessary = 100 - pie.good;
     }
 
-    // -------------------------
     // BAR DATA
-    // -------------------------
     const categoryTotals: Record<string, number> = {};
 
     expenses.forEach((exp) => {

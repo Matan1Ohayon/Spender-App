@@ -1,7 +1,7 @@
 import Collapse from "@/components/insights/Collapse";
 import { GraphsData } from "@/logic/buildGraphsData";
-import { StyleSheet, Text, View } from "react-native";
 import { scaleFont, scaleSize } from "@/utils/scale";
+import { StyleSheet, Text, View } from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 
 interface GraphsSectionProps {
@@ -52,13 +52,10 @@ export default function GraphsSection({ mode = "full", data }: GraphsSectionProp
     frontColor: barColors[index % barColors.length],
   }));
 
-  // -------------------------------------------------------
-  // PREVIEW MODE (Side Menu) 
-  // -------------------------------------------------------
+
   if (isPreview) {
     return (
       <View style={styles.previewWrapper}>
-        {/* SPENDING BREAKDOWN CARD */}
         <View style={styles.previewItem}>
           <View style={styles.previewCardContainer}>
             <View style={styles.previewDetails}>
@@ -72,7 +69,6 @@ export default function GraphsSection({ mode = "full", data }: GraphsSectionProp
           </View>
         </View>
 
-        {/* CATEGORIES CARD */}
         <View style={styles.previewItem}>
           <Text style={styles.previewCategory}>
             📊 Category Highlights
@@ -100,9 +96,7 @@ export default function GraphsSection({ mode = "full", data }: GraphsSectionProp
     );
   }
 
-  // -------------------------------------------------------
-  // FULL MODE (Insights Page)
-  // -------------------------------------------------------
+
   return (
     <Collapse title="📈 Graphs & Comparisons">
 

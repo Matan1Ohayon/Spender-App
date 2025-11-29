@@ -34,7 +34,6 @@ function parseExpenseDate(exp: Expense): Date {
 }
 
 
-// { YYYY-MM-DD : { necessary: X , unnecessary: X, total: X } }
 function groupByDay(expenses: Expense[]) {
   const map: Record<string, { necessary: number; unnecessary: number; total: number }> = {};
 
@@ -152,7 +151,6 @@ export function checkNewAchievements(
 
   const dailyList = Object.values(daily);
 
-  // עוברים רק על הישגים שלא הושגו
   const pending = achievementsList.filter(
     a => !unlockedAchievements.includes(a.id)
   );

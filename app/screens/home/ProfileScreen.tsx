@@ -4,6 +4,7 @@ import PasswordInput from "@/components/PasswordInput";
 import SideMenu from "@/components/SideMenu";
 import { useExpenses } from "@/contexts/ExpensesContext";
 import { db } from "@/firebase";
+import { scaleFont, scaleSize } from "@/utils/scale";
 import { Ionicons } from "@expo/vector-icons";
 import bcrypt from "bcryptjs";
 import * as ImagePicker from "expo-image-picker";
@@ -24,7 +25,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { scaleFont, scaleSize } from "@/utils/scale";
 
 const PRIMARY = "#390492";
 const LIGHT_BG = "#efe7ff";
@@ -47,7 +47,6 @@ export default function ProfileScreen() {
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
 
-  // --- טעינת מידע המשתמש מה-Firestore ---
   useEffect(() => {
     if (!phone) return;
 
@@ -74,11 +73,9 @@ export default function ProfileScreen() {
     loadUserData();
   }, [phone]);
 
-  // --- טיפול בחזרה לאפליקציה ---
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active' && showImagePicker) {
-        // אם האפליקציה חזרה למוקד והמודל עדיין פתוח, סגור אותו
         setShowImagePicker(false);
         slideAnim.setValue(300);
       }
@@ -89,7 +86,6 @@ export default function ProfileScreen() {
     };
   }, [showImagePicker, slideAnim]);
 
-  // --- בקשה להרשאות גלריה ---
   const requestGalleryPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -99,7 +95,6 @@ export default function ProfileScreen() {
     return true;
   };
 
-  // --- בקשה להרשאות מצלמה ---
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -109,7 +104,6 @@ export default function ProfileScreen() {
     return true;
   };
 
-  // --- בחירת תמונה מהגלריה ---
   const pickFromGallery = async () => {
     try {
       const hasPermission = await requestGalleryPermission();
@@ -124,7 +118,6 @@ export default function ProfileScreen() {
         quality: 0.8,
       });
       
-      // וודא שהמודל נסגר גם אם המשתמש ביטל
       setShowImagePicker(false);
       
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -136,7 +129,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // --- צילום תמונה ---
   const takePhoto = async () => {
     try {
       const hasPermission = await requestCameraPermission();
@@ -150,7 +142,6 @@ export default function ProfileScreen() {
         quality: 0.8,
       });
       
-      // וודא שהמודל נסגר גם אם המשתמש ביטל
       setShowImagePicker(false);
       
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -162,7 +153,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // --- פתיחת Action Sheet לבחירת תמונה ---
   const handleImagePicker = () => {
     setShowImagePicker(true);
     Animated.spring(slideAnim, {
@@ -173,7 +163,6 @@ export default function ProfileScreen() {
     }).start();
   };
 
-  // --- סגירת Action Sheet ---
   const closeImagePicker = () => {
     Animated.timing(slideAnim, {
       toValue: 300,
@@ -184,22 +173,16 @@ export default function ProfileScreen() {
     });
   };
 
-  // --- בחירה מגלריה ---
   const handlePickFromGallery = async () => {
-    // סגור את המודל מיד לפני פתיחת בוחר התמונות
     setShowImagePicker(false);
     slideAnim.setValue(300);
-    // המתן קצת כדי שהאנימציה תתבצע
     await new Promise(resolve => setTimeout(resolve, 100));
     await pickFromGallery();
   };
 
-  // --- צילום תמונה ---
   const handleTakePhoto = async () => {
-    // סגור את המודל מיד לפני פתיחת המצלמה
     setShowImagePicker(false);
     slideAnim.setValue(300);
-    // המתן קצת כדי שהאנימציה תתבצע
     await new Promise(resolve => setTimeout(resolve, 100));
     await takePhoto();
   };
@@ -208,7 +191,6 @@ export default function ProfileScreen() {
     setAvatar(defaultAvatarsURL[index]);
   }
 
-  // --- בחירת אווטארים מובנים ---
   const defaultAvatars = [
     require("@/assets/images/boy_icon.png"),
     require("@/assets/images/girl_icon.png"),
@@ -221,14 +203,11 @@ export default function ProfileScreen() {
     "https://files.catbox.moe/wwboj3.png",  //MONEYFACE_ICON
   ];
 
-  // --- העלאת תמונה ל-Catbox.moe ---
   const uploadImageToStorage = async (uri: string): Promise<string> => {
     try {
-      // יצירת FormData להעלאה ל-catbox.moe
       const formData = new FormData();
       const filename = `avatar_${phone}_${Date.now()}.jpg`;
       
-      // ב-React Native, FormData צריך אובייקט עם uri, type, name
       formData.append("reqtype", "fileupload");
       formData.append("fileToUpload", {
         uri: uri,
@@ -236,7 +215,6 @@ export default function ProfileScreen() {
         name: filename,
       } as any);
       
-      // העלאת התמונה ל-catbox.moe
       const response = await fetch("https://catbox.moe/user/api.php", {
         method: "POST",
         body: formData,
@@ -251,7 +229,6 @@ export default function ProfileScreen() {
       
       const result = await response.text();
       
-      // catbox.moe מחזיר את ה-URL ישירות או שגיאה
       if (result.startsWith("http")) {
         return result.trim();
       } else {
@@ -263,9 +240,7 @@ export default function ProfileScreen() {
     }
   };
 
-  // --- ולידציה ---
   const validateForm = (): boolean => {
-    // בדיקת שם - חייב להיות לפחות תו אחד באנגלית
     const hasEnglishChar = /[a-zA-Z]/.test(name);
     if (!hasEnglishChar) {
       setError("Name must contain at least one English character");
@@ -273,23 +248,19 @@ export default function ProfileScreen() {
       return false;
     }
 
-    // אם יש סיסמה, בדוק שהיא תקינה
     if (password || confirm) {
-      // אם יש סיסמה, צריך למלא את שני השדות
       if (!password || !confirm) {
         setError("Both password fields must be filled");
         setTimeout(() => setError(""), 5000);
         return false;
       }
 
-      // בדיקת אורך סיסמה
       if (password.length < 6) {
         setError("Password must be at least 6 characters");
         setTimeout(() => setError(""), 5000);
         return false;
       }
 
-      // בדיקת התאמת סיסמאות
       if (password !== confirm) {
         setError("Passwords do not match");
         setTimeout(() => setError(""), 5000);
@@ -316,19 +287,15 @@ export default function ProfileScreen() {
         updatedAt: serverTimestamp(),
       };
 
-      // עדכון אווטאר
       let avatarURL = "";
       if (avatar) {
         if (typeof avatar === "string") {
-          // אם זה URI מקומי (מגלריה/מצלמה), העלה ל-Storage
           if (avatar.startsWith("file://") || avatar.startsWith("content://")) {
             avatarURL = await uploadImageToStorage(avatar);
           } else {
-            // אם זה כבר URL (אווטאר מובנה או URL קיים)
             avatarURL = avatar;
           }
         } else {
-          // אם זה ImageSourcePropType (require), השתמש ב-URL המובנה
           const avatarIndex = defaultAvatars.findIndex(
             (img) => img === avatar
           );
@@ -339,7 +306,6 @@ export default function ProfileScreen() {
         updateData.avatar = avatarURL;
       }
 
-      // עדכון סיסמה אם יש
       if (password && confirm) {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -348,7 +314,6 @@ export default function ProfileScreen() {
 
       await updateDoc(userRef, updateData);
 
-      // איפוס שדות הסיסמה
       setPassword("");
       setConfirm("");
 
@@ -369,12 +334,10 @@ export default function ProfileScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
 
-        {/* HEADER */}
         <Header onMenuPress={() => setMenuOpen(true)} />
 
         <View style={styles.restMain}>
             <View style={styles.mainL}>
-                {/* AVATAR */}
                 <View style={styles.avatarContainer}>
                     <View>
                         <Image
@@ -390,7 +353,6 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </View>
                     
-                    {/* OPTIONS לבחור אווטאר ברירת מחדל */}
                     <View style={styles.avatarOptions}>
                         {defaultAvatars.map((img, i) => (
                         <TouchableOpacity key={i} onPress={() => pickFromAvatars(i)}>
@@ -401,7 +363,6 @@ export default function ProfileScreen() {
                 </View>
             </View>
             <View style={styles.mainR}>
-                {/* NAME */}
                 <TextInput
                     value={name}
                     onChangeText={setName}
@@ -410,7 +371,6 @@ export default function ProfileScreen() {
                     placeholderTextColor="#777"
                 />
 
-                {/* PHONE - נעול */}
                 <TextInput
                     value={phoneNumber}
                     editable={false}
@@ -439,10 +399,8 @@ export default function ProfileScreen() {
                 onSubmitEditing={handleSave}
             />
 
-            {/* ERROR MESSAGE */}
             {error ? <ErrorMessage message={error} /> : null}
 
-            {/* SAVE BUTTON */}
             <TouchableOpacity 
                 style={[styles.saveBtn, loading && styles.saveBtnDisabled]} 
                 onPress={handleSave}
@@ -463,7 +421,6 @@ export default function ProfileScreen() {
                 phone={phone as string}
             />
 
-        {/* IMAGE PICKER ACTION SHEET */}
         <Modal
             visible={showImagePicker}
             transparent={true}
@@ -525,7 +482,6 @@ const styles = StyleSheet.create({
 
   restMain:{
     flexDirection: "row",
-    // justifyContent: "space-between",
     alignItems: "center",
   },
 
@@ -633,7 +589,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 
-  // ACTION SHEET STYLES
   actionSheetOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",

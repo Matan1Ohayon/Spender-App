@@ -23,12 +23,9 @@ const ACCENT = "#8b73ff";
 const LIGHT_BG = "#efe7ff";
 
 function validateReset(pass: string, confirm: string) {
-  
-    // Password validations
     if (!pass) return "Password is required.";
     if (!/^\d{6}$/.test(pass)) return "Password must contain exactly 6 digits.";
 
-    // Confirm password
     if (!confirm) return "Please confirm your password.";
     if (pass !== confirm) return "Passwords do not match.";
     
@@ -96,7 +93,6 @@ export default function resetPass_2() {
 
           <AuthHero title="Choose your new password" titleVariant="medium" />
   
-          {/* תחתית רכה */}
           <View style={styles.bottomSection}>
 
             <PasswordInput
@@ -142,7 +138,6 @@ export default function resetPass_2() {
       backgroundColor: LIGHT_BG,
     },
   
-    // החלק העליון האלכסוני
     bottomSection: {
       marginTop: scaleSize(-10),
       paddingHorizontal: scaleSize(30),

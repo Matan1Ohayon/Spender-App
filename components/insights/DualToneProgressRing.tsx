@@ -5,7 +5,7 @@ import Svg, { Circle } from "react-native-svg";
 interface RingProps {
   size: number;
   strokeWidth: number;
-  progress: number; // 0–100
+  progress: number; 
   colorFilled?: string;
   colorEmpty?: string;
 }
@@ -26,7 +26,6 @@ export default function DualToneProgressRing({
   return (
     <View>
       <Svg width={size} height={size}>
-        {/* BACKGROUND CIRCLE - Empty part (drawn first, behind) */}
         <Circle
           stroke={colorEmpty}
           fill="none"
@@ -38,7 +37,6 @@ export default function DualToneProgressRing({
           strokeLinecap="round"
         />
 
-        {/* PROGRESS ARC - Filled part (drawn on top) */}
         {progress > 0 && (
           <Circle
             stroke={colorFilled}

@@ -30,7 +30,6 @@ function SwipeableCard({ item, index, renderCard, onSwipeOut, scale, translateY,
   const startX = useSharedValue(0);
   const opacity = useSharedValue(1);
   
-  // Show labels only for top card
   const shouldShowLabels = index === 0 && !isEditing;
 
   const panGesture = Gesture.Pan()
@@ -87,7 +86,7 @@ function SwipeableCard({ item, index, renderCard, onSwipeOut, scale, translateY,
     };
   });
 
-  // ⭐ RIGHT LABEL ⭐
+  // RIGHT LABEL
 const rightLabelStyle = useAnimatedStyle(() => {
   return {
     opacity: interpolate(
@@ -100,7 +99,7 @@ const rightLabelStyle = useAnimatedStyle(() => {
 });
 
 
-// ⭐ LEFT LABEL ⭐
+// LEFT LABEL
 const leftLabelStyle = useAnimatedStyle(() => {
   return {
     opacity: interpolate(
@@ -128,14 +127,12 @@ const leftLabelStyle = useAnimatedStyle(() => {
 
   return (
     <>
-      {/* RIGHT LABEL - מחוץ לכרטיס, בצד ימין של המסך */}
       {shouldShowLabels && (
         <Animated.View style={[styles.labelRight, rightLabelStyle]}>
           <Text style={styles.labelTextRight}>WORTH IT</Text>
         </Animated.View>
       )}
 
-      {/* LEFT LABEL - מחוץ לכרטיס, בצד שמאל של המסך */}
       {shouldShowLabels && (
         <Animated.View style={[styles.labelLeft, leftLabelStyle]}>
           <Text style={styles.labelTextLeft}>TOTAL WASTE</Text>
@@ -164,10 +161,8 @@ interface TinderStackProps {
 export default function TinderStack({ data, renderCard, isEditing = false, onSwipe }: TinderStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  // Position shared value עבור הכרטיס הראשון - משמש ל-overlay
   const topCardPosition = useSharedValue(0);
   
-  // Shared values לכל כרטיס - מאפשרים אנימציה חלקה
   const scales = [
     useSharedValue(1),
     useSharedValue(0.95),
@@ -180,49 +175,38 @@ export default function TinderStack({ data, renderCard, isEditing = false, onSwi
     useSharedValue(45),
   ];
   
-  // מסנן את הכרטיסיות - רק כאלה ללא type (ריק או לא קיים)
-  // משתמשים ב-useMemo כדי להבטיח שהסינון מתעדכן נכון
+
   const filteredData = useMemo(() => {
     return data.filter((item: any) => !item.type || item.type === "");
   }, [data]);
   
-  // מאפס את currentIndex אם ה-data השתנה משמעותית (כרטיסים הוסרו)
-  // חשוב: currentIndex צריך להישאר 0 כשהכרטיסיה הראשונה נעלמת
+
   useEffect(() => {
-    // אם currentIndex גדול או שווה לאורך ה-filteredData, מאפסים אותו
     if (currentIndex >= filteredData.length) {
       setCurrentIndex(0);
     }
-    // אם אין כרטיסים בכלל, מאפסים את ה-index
     if (filteredData.length === 0) {
       setCurrentIndex(0);
     }
-    // אם currentIndex הוא 0 ויש כרטיסים, זה בסדר - נשאר 0
-    // זה מבטיח שכשהכרטיסיה הראשונה נעלמת, currentIndex נשאר 0 והכרטיסיה הבאה תופיע
+
   }, [filteredData.length, currentIndex]);
   
   function removeTopCard(direction: 'left' | 'right') {
-    // לא מעדכן את currentIndex מיד - נחכה שהכרטיסיה תיעלם מה-filteredData
     const currentItem = filteredData[currentIndex];
-    // מאפס את ה-position כדי שה-overlay יחזור להיות שקוף
     topCardPosition.value = 0;
     
-    // קורא ל-callback אם קיים
     if (onSwipe && currentItem) {
       onSwipe(direction, currentItem);
     }
   }
 
-  // מעדכן את ה-shared values מיד כשהכרטיסים משתנים
   useEffect(() => {
-    // אנימציה מהירה מאוד - הכרטיסים הבאים עולים מיד
     const springConfig = {
       damping: 20,
       stiffness: 500,
       mass: 0.4,
     };
     
-    // אנימציה מסונכרנת ומהירה מאוד של כל הכרטיסים
     scales[0].value = withSpring(1, springConfig);
     scales[1].value = withSpring(0.95, springConfig);
     scales[2].value = withSpring(0.9, springConfig);
@@ -232,10 +216,8 @@ export default function TinderStack({ data, renderCard, isEditing = false, onSwi
     translateYs[2].value = withSpring(45, springConfig);
   }, [currentIndex]);
 
-  // לוקח את 3 הכרטיסים הבאים להצגה (רק מהמסוננים)
   const visibleCards = filteredData.slice(currentIndex, currentIndex + 3);
 
-  // Overlay style - מתכהה כשמגררים את הכרטיס
   const overlayStyle = useAnimatedStyle(() => {
     const rightOpacity = interpolate(
       topCardPosition.value,
@@ -255,24 +237,18 @@ export default function TinderStack({ data, renderCard, isEditing = false, onSwi
     };
   });
 
-  // אם אין כרטיסים, מחזיר container ריק
   if (visibleCards.length === 0) {
     return <View style={styles.container} />;
   }
 
   return (
     <>
-      {/* DARK OVERLAY - מתכהה כשמגררים - מכסה את כל המסך */}
       {!isEditing && (
         <Animated.View style={[styles.darkOverlay, overlayStyle]} pointerEvents="none" />
       )}
       
       <View style={styles.container}>
         {visibleCards.slice().reverse().map((item, mapIndex) => {
-        // אחרי reverse(), visibleCards[0] הוא האחרון ב-map (למעלה)
-        // mapIndex 0 = visibleCards[2] (השלישי במערך המקורי) -> צריך להיות index 2 (למטה)
-        // mapIndex 1 = visibleCards[1] (השני במערך המקורי) -> צריך להיות index 1 (אמצע)
-        // mapIndex 2 = visibleCards[0] (הראשון במערך המקורי) -> צריך להיות index 0 (למעלה)
         const stackIndex = visibleCards.length - 1 - mapIndex;
         return (
           <SwipeableCard
@@ -315,13 +291,13 @@ const styles = StyleSheet.create({
     width: width + 2000,
     height: height + 2000,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
-    zIndex: 500, // מאחורי התוויות אבל מעל הכרטיסים
+    zIndex: 500, 
   },
   labelRight: {
     position: "absolute",
     right: 0,
     top: "50%",
-    marginTop: -40, // מרכז אנכי (חצי גובה התווית)
+    marginTop: -40, 
     paddingVertical: 12,
     paddingHorizontal: 6,
     borderWidth: 3,
@@ -346,7 +322,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     top: "50%",
-    marginTop: -40, // מרכז אנכי (חצי גובה התווית)
+    marginTop: -40,
     paddingVertical: 12,
     paddingHorizontal: 6,
     borderWidth: 3,

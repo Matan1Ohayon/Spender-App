@@ -52,7 +52,7 @@ function getCategoryWithEmoji(category: string): string {
   return `${emoji} ${cleanCategory}`;
 }
 
-const paymentMethods = ["Credit Card", "Cash", "Debit Card", "Bit", "PayPal"];
+const paymentMethods = ["Credit Card", "Cash", "Debit Card", "Bank Transfer", "Bit/ PayBox", "PayPal"];
 
 interface EditSpendCardProps {
   item: any;

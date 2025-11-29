@@ -77,7 +77,7 @@ export default function insightsPage() {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+
       <Header onMenuPress={() => setMenuOpen(true)} />
 
       <ScrollView 
@@ -120,8 +120,6 @@ const styles = StyleSheet.create({
   },
 
   restMain:{
-    // flexDirection: "row",
-    // alignItems: "center",
   },
 
 });

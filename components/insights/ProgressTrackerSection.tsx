@@ -1,6 +1,6 @@
 import Collapse from "@/components/insights/Collapse";
-import { StyleSheet, Text, View } from "react-native";
 import { scaleFont, scaleSize } from "@/utils/scale";
+import { StyleSheet, Text, View } from "react-native";
 import DualToneProgressRing from "./DualToneProgressRing";
 
 export interface Expense {
@@ -61,7 +61,7 @@ export default function ProgressSection({ expenses }: ProgressSectionProps) {
       d.setHours(0,0,0,0);
       return d;
     })
-    .filter((d): d is Date => d !== null && d.getTime() > 0) // Filter out invalid dates
+    .filter((d): d is Date => d !== null && d.getTime() > 0) 
     .sort((a, b) => a.getTime() - b.getTime());
 
   let wastePerDay: number[] = [];

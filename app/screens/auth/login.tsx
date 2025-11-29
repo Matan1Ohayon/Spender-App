@@ -1,3 +1,4 @@
+import AuthHero from "@/components/AuthHero";
 import { db } from "@/firebase";
 import { scaleFont, scaleSize } from "@/utils/scale";
 import bcrypt from "bcryptjs";
@@ -15,7 +16,6 @@ import {
 } from "react-native";
 import ErrorMessage from "../../../components/ErrorMessage";
 import PasswordInput from "../../../components/PasswordInput";
-import AuthHero from "@/components/AuthHero";
 
 const PRIMARY = "#390492";
 const ACCENT = "#8b73ff";
@@ -100,7 +100,6 @@ export default function Login() {
       <View style={styles.container}>
         <AuthHero title={getGreeting()} />
 
-        {/* BOTTOM SECTION */}
         <View style={styles.bottomSection}>
           <TextInput
             ref={phoneRef}
@@ -155,10 +154,6 @@ export default function Login() {
   );
 }
 
-// ------------------------------------------------------
-// ---------------------- STYLES ------------------------
-// ------------------------------------------------------
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -171,7 +166,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    borderBottomWidth: 2, // ❗ border width נשאר קבוע
+    borderBottomWidth: 2, 
     borderBottomColor: PRIMARY,
     paddingVertical: scaleSize(14),
     fontFamily: "DMSans_400Regular",

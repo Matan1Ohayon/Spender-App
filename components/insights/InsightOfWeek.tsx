@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
 import { scaleFont, scaleSize } from "@/utils/scale";
+import { StyleSheet, Text, View } from "react-native";
 
 const PRIMARY = "#390492";
 
@@ -12,7 +12,6 @@ interface InsightProps {
 }
 
 export default function InsightOfWeek({ data, preview = false }: InsightProps) {
-  // מצב PREVIEW (עבור Edit Layout)
   if (preview) {
     return (
       <View style={[styles.card, styles.previewBox]}>

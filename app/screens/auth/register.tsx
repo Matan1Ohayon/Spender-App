@@ -25,20 +25,16 @@ const LIGHT_BG = "#efe7ff";
 
 
 function validateRegister(name: string, phone: string, pass: string, confirm: string) {
-    // Name validations
     if (!name || name.trim() === "") return "Full name is required.";
     if (!/[a-zA-Z]/.test(name)) return "Full name must contain English letters.";
     if (!/\s/.test(name.trim())) return "Please enter both first and last name.";
     
-    // Phone validations
     if (!phone) return "Phone number is required.";
     if (!/^\d{10}$/.test(phone)) return "Phone number must contain exactly 10 digits.";
   
-    // Password validations
     if (!pass) return "Password is required.";
     if (!/^\d{6}$/.test(pass)) return "Password must contain exactly 6 digits.";
 
-    // Confirm password
     if (!confirm) return "Please confirm your password.";
     if (pass !== confirm) return "Passwords do not match.";
     
@@ -170,9 +166,6 @@ export default function Register() {
     
                 {error !== "" && <ErrorMessage message={error} />}
 
-                {/* <TouchableOpacity style={styles.loginButton} onPress={handleRegister}>
-                    <Text style={styles.loginText}>Register</Text>
-                </TouchableOpacity> */}
 
                 <TouchableOpacity
                     style={[styles.loginButton, loading && { opacity: 0.6 }]}

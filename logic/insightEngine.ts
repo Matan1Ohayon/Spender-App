@@ -3,14 +3,14 @@
 export interface Expense {
   amount: number | string;
   category: string;
-  type?: string | null;  // יכול להיות undefined / null / ""
-  date?: string;         // פורמט כמו "Nov 3"
-  dateISO?: string;      // ISO string אמיתי אם יש
+  type?: string | null;  
+  date?: string;         
+  dateISO?: string;      
 }
 
 export interface Insight {
   title: string;
-  description: string;   // משפט אחד בלבד
+  description: string;   
 }
 
 interface WeeklyStats {
@@ -24,8 +24,7 @@ interface WeeklyStats {
   categoriesLastWeek: Record<string, number>;
 }
 
-// ---- Helpers ----
-
+//Helper
 function parseDate(exp: Expense): Date {
   if (exp.dateISO) {
     const d = new Date(exp.dateISO);
@@ -33,7 +32,7 @@ function parseDate(exp: Expense): Date {
   }
 
   if (exp.date) {
-    const parts = exp.date.split(" "); // ציפייה למשהו כמו "Nov 3"
+    const parts = exp.date.split(" "); 
     if (parts.length >= 2) {
       const months = [
         "Jan","Feb","Mar","Apr","May","Jun",
@@ -46,7 +45,6 @@ function parseDate(exp: Expense): Date {
         const now = new Date();
         let y = now.getFullYear();
 
-        // אם אנחנו בינואר וההוצאה מדצמבר – שנה שעברה
         if (now.getMonth() < m) {
           y -= 1;
         }
@@ -56,7 +54,7 @@ function parseDate(exp: Expense): Date {
     }
   }
 
-  return new Date(0); // תאריך לא תקין
+  return new Date(0);
 }
 
 function getWeekBoundaries() {
@@ -68,18 +66,14 @@ function getWeekBoundaries() {
     23, 59, 59, 999
   );
 
-  // שבוע נוכחי = 7 ימים אחרונים כולל היום
   const oneWeekAgo = new Date(endToday);
   oneWeekAgo.setDate(endToday.getDate() - 6);
 
-  // שבוע קודם = 7 הימים שלפני זה
   const twoWeeksAgo = new Date(oneWeekAgo);
   twoWeeksAgo.setDate(oneWeekAgo.getDate() - 7);
 
   return { endToday, oneWeekAgo, twoWeeksAgo };
 }
-
-// ---- Main logic ----
 
 export function generateInsightOfTheWeek(expenses: Expense[]): Insight {
   if (!expenses || expenses.length === 0) {
@@ -102,11 +96,9 @@ export function generateInsightOfTheWeek(expenses: Expense[]): Insight {
     categoriesLastWeek: {},
   };
 
-  // ---- Aggregation ----
-
   expenses.forEach((exp) => {
     const date = parseDate(exp);
-    if (date.getFullYear() === 1970) return; // תאריך לא תקין
+    if (date.getFullYear() === 1970) return; 
 
     const amount = Number(exp.amount) || 0;
     if (amount <= 0) return;
@@ -123,7 +115,6 @@ export function generateInsightOfTheWeek(expenses: Expense[]): Insight {
 
     if (!isThisWeek && !isLastWeek) return;
 
-    // שבוע נוכחי
     if (isThisWeek) {
       stats.totalThisWeek += amount;
 
@@ -137,7 +128,6 @@ export function generateInsightOfTheWeek(expenses: Expense[]): Insight {
         (stats.categoriesThisWeek[exp.category] || 0) + amount;
     }
 
-    // שבוע קודם
     if (isLastWeek) {
       stats.totalLastWeek += amount;
 

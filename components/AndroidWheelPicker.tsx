@@ -1,3 +1,5 @@
+// This file made by AI
+
 import { scaleFont, scaleSize } from "@/utils/scale";
 import { useEffect, useMemo, useRef } from "react";
 import { FlatList, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, Text, View } from "react-native";
