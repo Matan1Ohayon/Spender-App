@@ -52,14 +52,31 @@ A modern, intuitive mobile expense tracking application built with **React Nativ
 ### 📸 Screenshots
 
 <p align="center">
-  <img src="assets/screenshots/screenshot (1).jpg" width="250"/>
-   <img src="assets/screenshots/screenshot (2).jpg" width="250"/>
-   <img src="assets/screenshots/screenshot (3).jpg" width="250"/>
-   <img src="assets/screenshots/screenshot (4).jpg" width="250"/>
-   <img src="assets/screenshots/screenshot (5).jpg" width="250"/>
+  <img src="assets/screenshots/screenshot (1).jpg" width="400"/>
+   <img src="assets/screenshots/screenshot (2).jpg" width="400"/>
+   <img src="assets/screenshots/screenshot (3).jpg" width="400"/>
+   <img src="assets/screenshots/screenshot (4).jpg" width="400"/>
+   <img src="assets/screenshots/screenshot (5).jpg" width="400"/>
 </p>
 
+---
 
+### 📲 Running on a Real Mobile Device
+
+To run Spender directly on your physical phone:
+
+1. Install Expo Go
+
+   - iOS: App Store
+
+   - Android: Google Play
+
+2. Open Expo Go and paste this link:
+```bash
+https://shorturl.at/LxSx2
+```
+
+The app will load instantly on your device - no build required.
 
 ---
 
