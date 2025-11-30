@@ -63,7 +63,12 @@ A modern, intuitive mobile expense tracking application built with **React Nativ
 
 ### 📲 Running on a Real Mobile Device
 
-To run Spender directly on your physical phone:
+You can follow this link for instructions:
+
+```bash
+https://matans-portfolio.vercel.app/spender-demo
+```
+Or follow the steps below:
 
 1. Install Expo Go
 
